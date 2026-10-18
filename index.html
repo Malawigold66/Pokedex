@@ -107,6 +107,17 @@ button.pri{background:var(--acc);border-color:var(--acc);color:#2b1208;font-weig
 #fx_psl>div:hover{background:rgba(255,255,255,.08)}
 #fx_psl small{display:block;color:var(--mut);font-size:11px}
 /* ===== FIN PATCH LIEU-RECHERCHE (style) ===== */
+/* ===== PATCH ARBRE-FICHE (style) ===== */
+.fxar-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:4px 0 8px}
+.fxar-bar button{padding:3px 12px;font-size:13px}
+.fxar-st{font-size:13px;color:var(--mut);margin:0 0 8px}
+.fxar-st b{color:var(--txt)}
+.fxar-f{display:block;width:100%;height:clamp(520px,calc(100vh - 90px),1040px);border:1px solid var(--line);border-radius:10px;background:#0b0c10}
+#fx_arov{position:fixed;inset:0;z-index:2000;background:#0b0c10}
+#fx_arov iframe{display:block;width:100%;height:100%;border:0}
+#fx_arx{position:absolute;top:10px;right:10px;z-index:2;width:42px;height:42px;padding:0;border-radius:50%;font-size:20px;line-height:1;background:rgba(26,29,38,.88);border:1px solid var(--line);backdrop-filter:blur(8px)}
+@media (max-width:700px){.fxar-f{height:min(70vh,520px)}}
+/* ===== FIN PATCH ARBRE-FICHE (style) ===== */
 </style></head><body>
 <header>
  <h1>Pokedex des espèces</h1>
@@ -242,7 +253,7 @@ const FXT={
  "Fermer":"Close","Modifier":"Edit","Supprimer":"Delete","Tout déplier":"Expand all","Tout replier":"Collapse all",
  "Morphologie":"Morphology","Comportement":"Behaviour","Alimentation":"Diet","Reproduction":"Breeding",
  "Répartition":"Distribution","Rôle écologique":"Ecological role","Habitat et répartition":"Habitat and distribution",
- "Taxonomie":"Taxonomy","Mes observations":"My observations","Carte":"Map","Aucune":"None",
+ "Taxonomie":"Taxonomy","Mes observations":"My observations","Carte":"Map","Arbre du vivant":"Tree of life","Aucune":"None",
  "Règne":"Kingdom","Embranchement":"Phylum","Classe":"Class","Ordre":"Order","Famille":"Family","Genre":"Genus","Espèce":"Species",
  "Statut UICN":"IUCN status","Taille":"Size","Poids":"Weight","Longévité":"Lifespan","Ponte / portée":"Clutch / litter","Régime":"Diet type",
  "Préoccupation mineure":"Least concern","Quasi menacée":"Near threatened","Vulnérable":"Vulnerable","En danger":"Endangered",
@@ -716,6 +727,72 @@ function fxTri(l,mode){
  return A.sort((a,b)=>{const x=d(a),y=d(b);if(x&&!y)return -1;if(!x&&y)return 1;if(x!==y)return sens*x.localeCompare(y);return nom(a).localeCompare(nom(b),lg)});   /* sans date : a la fin */
 }
 /* ===== FIN PATCH TRI-FILTRES ===== */
+/* ===== PATCH ARBRE-FICHE ===== */
+/* Section « Arbre du vivant » de la fiche : l'arbre (site separe) s'affiche dans un cadre UNIQUEMENT quand la section est depliee ;
+   replier la section DECHARGE completement le cadre. Il s'ouvre deja sur le groupe de l'espece, chemin surligne depuis la racine.
+   Les noms (espece, genre, famille, ordre, classe...) sont envoyes du plus precis au plus general : l'arbre retient le premier qu'il connait. */
+const FX_TREE_URL="https://phylotree-mg.netlify.app/";
+const FX_TREE_ORIGIN="https://phylotree-mg.netlify.app";
+const FX_AR_DELAI=8000;   /* ms : sans reponse de l'arbre (ancienne version en ligne ?), on le dit */
+function fxArNoms(e){
+ const R=[[e.nom_latin,"espèce","species"],[e.genre,"genre","genus"],[e.famille,"famille","family"],[e.ordre,"ordre","order"],[e.classe,"classe","class"],[e.phylum,"embranchement","phylum"],[e.regne,"règne","kingdom"]];
+ const vu={};
+ return R.filter(r=>{const k=String(r[0]||"").trim().toLowerCase();if(!k||vu[k])return false;vu[k]=1;return true}).map(r=>({n:String(r[0]).trim(),r:[r[1],r[2]]}));
+}
+function fxArUrl(noms,mode){
+ return FX_TREE_URL+"?"+(mode==="embed"?"embed=1&":mode==="fs"?"fs=1&":"")+"lang="+(LANG==="en"?"en":"fr")+"&n="+encodeURIComponent(noms.map(x=>x.n).join("|"));
+}
+function fxArbreHtml(e){return '<div id="fx_ar" data-id="'+esc(e.id)+'"></div>'}
+function fxArEsp(box){return box?ESP.find(x=>x.id===box.dataset.id):null}
+function fxArbreOuvrir(box){
+ const e=fxArEsp(box);if(!e)return;
+ const noms=fxArNoms(e);
+ box._noms=noms;
+ box.innerHTML='<div class="fxar-bar"><button type="button" id="fx_arpe">⤢ '+T2("Agrandir","Full screen")+'</button><button type="button" id="fx_arnw">↗ '+T2("Ouvrir dans un onglet","Open in a new tab")+'</button></div>'+
+  '<div class="fxar-st" id="fx_arst">'+T2("Chargement de l'arbre…","Loading the tree…")+'</div>'+
+  '<iframe class="fxar-f" id="fx_arf" title="'+T2("Arbre du vivant","Tree of life")+'" allow="fullscreen" src="'+esc(fxArUrl(noms,"embed"))+'"></iframe>';
+ document.getElementById("fx_arpe").onclick=()=>fxArbrePlein(box);
+ document.getElementById("fx_arnw").onclick=()=>{window.open(fxArUrl(noms,"tab"),"_blank","noopener")};
+ clearTimeout(box._to);
+ box._to=setTimeout(()=>{const st=document.getElementById("fx_arst");if(st&&box._noms)st.textContent=T2("L'arbre ne répond pas. Vérifie la connexion, ou que la version de l'arbre en ligne gère l'ouverture sur une espèce.","The tree is not responding. Check your connection, or that the online tree version supports opening on a species.")},FX_AR_DELAI);
+}
+function fxArbreFermer(box){   /* decharge TOUT : le cadre disparait, donc l'arbre (et sa 3D) est libere */
+ if(!box)return;
+ clearTimeout(box._to);box._noms=null;box.innerHTML="";
+}
+function fxArbrePlein(box){
+ const noms=box._noms||fxArNoms(fxArEsp(box)||{});
+ fxArbreFermer(box);                                    /* un seul arbre charge a la fois */
+ const ov=document.createElement("div");ov.id="fx_arov";
+ ov.innerHTML='<iframe title="'+T2("Arbre du vivant","Tree of life")+'" allow="fullscreen" src="'+esc(fxArUrl(noms,"fs"))+'"></iframe><button type="button" id="fx_arx" aria-label="'+T2("Fermer","Close")+'">✕</button>';
+ document.body.appendChild(ov);
+ const fermer=()=>{ov.remove();const d=document.getElementById("fx_arbre"),b=document.getElementById("fx_ar");if(d&&d.open&&b)fxArbreOuvrir(b)};
+ document.getElementById("fx_arx").onclick=fermer;
+ ov._fermer=fermer;
+}
+function fxArStatut(m,noms){
+ if(!m.found)return T2("Cette espèce, et aucun de ses groupes, n'est dans l'arbre pour l'instant.","Neither this species nor any of its groups is in the tree yet.");
+ const r=noms[m.idx];if(!r)return"";
+ const rg=T2(r.r[0],r.r[1]);
+ if(m.idx===0)return T2("Dans l'arbre : <b>","In the tree: <b>")+esc(m.nm)+"</b>";
+ return T2("L'espèce n'est pas dans l'arbre : chemin surligné jusqu'au groupe <b>","The species is not in the tree: path highlighted up to <b>")+esc(m.nm)+"</b> ("+rg+" <i>"+esc(r.n)+"</i>"+(m.via==="genre"?T2(", genre présent dans ce groupe",", genus present in this group"):"")+").";
+}
+document.addEventListener("toggle",ev=>{
+ const d=ev.target;if(!d||d.id!=="fx_arbre")return;
+ const box=document.getElementById("fx_ar");if(!box)return;
+ if(d.open)fxArbreOuvrir(box);else fxArbreFermer(box);
+},true);
+window.addEventListener("message",ev=>{
+ const m=ev.data;if(!m||m.pk!=="tree"||ev.origin!==FX_TREE_ORIGIN)return;
+ const box=document.getElementById("fx_ar"),st=document.getElementById("fx_arst");
+ if(m.type==="match"&&box&&box._noms&&st){clearTimeout(box._to);st.innerHTML=fxArStatut(m,box._noms)}
+});
+document.addEventListener("keydown",ev=>{    /* Echap : ferme le plein ecran SEULEMENT (pas la fiche) */
+ if(ev.key!=="Escape")return;
+ const ov=document.getElementById("fx_arov");if(!ov)return;
+ ev.stopImmediatePropagation();ev.preventDefault();ov._fermer&&ov._fermer();
+},true);
+/* ===== FIN PATCH ARBRE-FICHE ===== */
 function fxGo(id){const el=document.getElementById(id);if(!el)return;if(el.tagName==="DETAILS")el.open=true;el.scrollIntoView({behavior:"smooth",block:"start"})}
 function fxAll(o){document.querySelectorAll("#md details.fxd").forEach(d=>{d.open=o})}
 function ficheBase(id){
@@ -733,6 +810,7 @@ function ficheBase(id){
   ["fx_comp","Comportement",fxBloc("",e.comportement)+fxBloc("Alimentation",e.alimentation)+fxBloc("Reproduction",e.reproduction)],
   ["fx_hab","Habitat et répartition",fxBloc("Habitat",e.habitat)+fxBloc("Répartition",e.repartition)+fxBloc("Migration",e.migration)+fxBloc("Rôle écologique",e.ecologie)],
   ["fx_taxo","Taxonomie",`<table class="fxtx">${taxo}</table>`],
+  ["fx_arbre","Arbre du vivant",fxArbreHtml(e)],
   ["fx_obs","Mes observations ("+ob.length+")",(SES?fxObsAdmin(ob,e.id):`<div class="fxp">${obs}</div>`)],
   ["fx_carte","Carte",`<div id="fx_map"></div><div class="cr" style="margin-top:6px">Densité des observations GBIF (pas l'aire de répartition officielle). Pays colorés selon le nombre d'observations GBIF : plus foncé = plus d'observations, donc mieux observé, pas forcément plus abondant. Marqueurs turquoise : tes observations avec coordonnées. <a style="color:var(--acc)" href="${iucn}" target="_blank" rel="noopener">Voir la fiche UICN</a></div>`]
  ].filter(x=>x[2]);
