@@ -89,25 +89,22 @@ button.pri{background:var(--acc);border-color:var(--acc);color:#2b1208;font-weig
 .fxfrb{display:inline-block;font-style:normal;font-size:10px;letter-spacing:.06em;padding:0 6px;border-radius:99px;border:1px solid var(--line);color:var(--mut);vertical-align:1px}
 /* contour des pays plus net : les petits pays et les iles restent visibles de loin */
 .leaflet-pays-pane path{stroke:#fff;stroke-opacity:.7;stroke-width:1.6px;vector-effect:non-scaling-stroke}
-/* ===== PATCH OBSERVATIONS (style) ===== */
+/* ---- Observations : liste et boutons ---- */
 .fxo{display:flex;gap:8px;align-items:baseline;padding:6px 0;border-bottom:1px solid var(--line)}
 .fxo span{flex:1;white-space:pre-line}
 .fxob{padding:2px 10px;font-size:12px}
 .fxo-add{margin:2px 0 8px}
-/* ===== FIN PATCH OBSERVATIONS (style) ===== */
-/* ===== PATCH CARTE-POINT (style) ===== */
+/* ---- Carte du lieu (formulaire d'observation) ---- */
 #fx_pm{height:260px;border-radius:10px;overflow:hidden;background:#0f0e0b;margin:4px 0}
 .fxpin{width:14px;height:14px;border-radius:50%;background:#22d3ee;border:2px solid #0b0a08;box-shadow:0 0 0 1px rgba(255,255,255,.8)}
-/* ===== FIN PATCH CARTE-POINT (style) ===== */
-/* ===== PATCH LIEU-RECHERCHE (style) ===== */
+/* ---- Recherche de lieu (suggestions) ---- */
 .fxps{position:relative;margin:4px 0}
 .fxps input{width:100%}
 #fx_psl{position:absolute;left:0;right:0;top:100%;z-index:1100;background:#1d1b16;border:1px solid var(--line);border-radius:8px;max-height:250px;overflow:auto;display:none;box-shadow:0 10px 30px rgba(0,0,0,.5)}
 #fx_psl>div{padding:7px 10px;cursor:pointer;border-bottom:1px solid var(--line)}
 #fx_psl>div:hover{background:rgba(255,255,255,.08)}
 #fx_psl small{display:block;color:var(--mut);font-size:11px}
-/* ===== FIN PATCH LIEU-RECHERCHE (style) ===== */
-/* ===== PATCH ARBRE-FICHE (style) ===== */
+/* ---- Arbre du vivant dans la fiche ---- */
 .fxar-bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:4px 0 8px}
 .fxar-bar button{padding:3px 12px;font-size:13px}
 .fxar-st{font-size:13px;color:var(--mut);margin:0 0 8px}
@@ -117,12 +114,30 @@ button.pri{background:var(--acc);border-color:var(--acc);color:#2b1208;font-weig
 #fx_arov iframe{display:block;width:100%;height:100%;border:0}
 #fx_arx{position:absolute;top:10px;right:10px;z-index:2;width:42px;height:42px;padding:0;border-radius:50%;font-size:20px;line-height:1;background:rgba(26,29,38,.88);border:1px solid var(--line);backdrop-filter:blur(8px)}
 @media (max-width:700px){.fxar-f{height:min(70vh,520px)}}
-/* ===== FIN PATCH ARBRE-FICHE (style) ===== */
+/* Carte globale */
+#fx_gm{position:fixed;inset:0;z-index:1500;background:#0b0a08;display:none}
+#fx_gm.on{display:block}
+#fx_gmap{position:absolute;inset:0;background:#0f0e0b}
+#fx_gpan{position:absolute;top:12px;left:12px;z-index:1000;width:min(310px,calc(100vw - 84px));max-height:calc(100% - 24px);overflow:auto;padding:12px 14px;border-radius:14px;background:rgba(29,27,22,.8);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border:1px solid var(--line);box-shadow:0 8px 28px rgba(0,0,0,.45);font-size:13px}
+#fx_gpan summary{cursor:pointer;font:400 19px var(--serif);list-style:none}
+#fx_gpan summary::-webkit-details-marker{display:none}
+#fx_gpan input#fx_gq{width:100%;margin:10px 0 6px}
+.fxg-f{display:flex;gap:8px;align-items:center;color:var(--mut);margin:6px 0 4px}
+.fxg-r{display:flex;gap:8px;align-items:center;margin:6px 0;cursor:pointer}
+.fxg-r input{width:auto;padding:0;background:none;border:0;accent-color:var(--acc);flex:none}
+.fxg-r b{margin-left:auto;font-weight:500;color:var(--mut)}
+.fxg-d{width:12px;height:12px;border-radius:50%;border:1.5px solid #0b0a08;flex:none}
+.fxg-b{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.fxg-b button{padding:4px 10px;font-size:12px}
+.fxg-s{margin-top:8px;font-size:12px;color:var(--mut)}
+#fx_gx{position:absolute;top:12px;right:12px;z-index:1000;width:42px;height:42px;padding:0;border-radius:50%;font-size:18px;line-height:1;background:rgba(29,27,22,.85);backdrop-filter:blur(8px);border:1px solid var(--line)}
+#fx_gm .leaflet-popup-content-wrapper,#fx_gm .leaflet-popup-tip{background:#1d1b16;color:#ece8df}
+#fx_gm .leaflet-popup-content a{color:var(--acc)}
 </style></head><body>
 <header>
  <h1>Pokedex des espèces</h1>
  <div class="stats" id="st"></div>
- <div><button id="add" class="pri" style="display:none" onclick="openAdd()">+ Ajouter</button> <button id="log" onclick="openLogin()">Connexion</button> <button id="lang" onclick="toggleLang()"><span class="lg on">FR</span> | <span class="lg">EN</span></button></div>
+ <div><button id="fx_gbtn" onclick="fxGlobe()">Carte</button> <button id="add" class="pri" style="display:none" onclick="openAdd()">+ Ajouter</button> <button id="log" onclick="openLogin()">Connexion</button> <button id="lang" onclick="toggleLang()"><span class="lg on">FR</span> | <span class="lg">EN</span></button></div>
 </header>
 <div class="bar"><input id="q" placeholder="Filtrer : nom, famille, ordre…" oninput="render()"><select id="cl" onchange="render()"><option value="">Tous les groupes</option></select><select id="pf" onchange="render()"></select><select id="af" onchange="render()"></select><select id="so" onchange="fxSortSet(this.value);render()"></select></div>
 <div id="grid"></div>
@@ -130,6 +145,27 @@ button.pri{background:var(--acc);border-color:var(--acc);color:#2b1208;font-weig
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>
+/* Pokedex des especes : version CONSOLIDEE v3 du 18 oct. 2026. Les correctifs successifs ont ete integres au code (plus de chaine de patchs). */
+/* SOMMAIRE (une section = un sujet ; chercher « N. » pour y aller)
+   1. BASE : constantes, etat, utilitaires
+   2. LANGUE COURANTE
+   3. CHAMPS DES FICHES
+   4. IMPORT : constantes (sections reconnues, UICN, poissons)
+   5. RECHERCHE : constantes
+   6. SOURCES DE TEXTE : Wikipedia, GBIF, FishBase, Wikidata, extraction, langue
+   7. TRADUCTION DE L'INTERFACE (FR / EN)
+   8. TEXTES : detection de l'anglais et affichage d'un bloc
+   9. GRILLE : chargement, cartes, rendu, cadrage de la photo
+   10. FICHE : ouverture, bandeau photo, navigation
+   11. ARBRE DU VIVANT : cadre integre dans la fiche
+   12. CARTE : fonds communs (FX_FONDS), zoom continu, cadrage monde, carte de la fiche (pays colores par nombre d'observations GBIF, observations perso)
+   13. MODIFIER : formulaire, version anglaise, point focal, outils, enregistrement
+   14. OBSERVATIONS : date, pays, carte du lieu, recherche de lieu, ajout / modification / suppression
+   15. CONNEXION ET SUPPRESSION
+   16. AJOUT D'UNE ESPECE : recherche, import multi-sources, enregistrement
+   17. CARTE GLOBALE : toutes les observations, couleurs par grand groupe, filtres
+   18. DEMARRAGE
+*/
 /* ================================================================== */
 /* 1. BASE : constantes, etat, utilitaires */
 const URL_SB="https://buirnfstagzltzronlmu.supabase.co";
@@ -160,7 +196,7 @@ const C5N="(\\d{1,3}(?:[\\s\\u00a0\\u202f.,]\\d{3})+|\\d+(?:[.,]\\d+)?)";
 /* ================================================================== */
 /* 4. IMPORT : constantes (sections reconnues, UICN, poissons) */
 const FX2_MIN=120;
-const FX2_FISH=["Actinopterygii","Elasmobranchii","Chondrichthyes","Holocephali","Petromyzonti","Myxini","Cephalaspidomorphi","Sarcopterygii"];
+const FX2_FISH=["Actinopterygii","Elasmobranchii","Chondrichthyes","Holocephali","Petromyzonti","Myxini","Cephalaspidomorphi","Sarcopterygii","Actinopteri","Teleostei","Osteichthyes"];   /* GBIF recent n'a plus de rang "classe" pour les poissons : noms intermediaires acceptes */
 const FX2_CAT={
  morphologie:/(morpholog|description|appearance|anatomy|anatomie|physical|caract[eé]ristiques)/i,
  comportement:/(comportement|[eé]thologie|m[oœ]eurs|behaviou?r|vie sociale|social)/i,
@@ -261,7 +297,6 @@ const FXT={
  "Données insuffisantes":"Data deficient","Non évaluée":"Not evaluated"
 };
 const FXTR=[
- [/^N° (\d+)/,"No. $1"],
  [/^Mes observations \((\d+)\)$/,"My observations ($1)"],
  [/^Photo : (.*)$/,"Photo: $1"],
  [/^Sources : (.*?) · consulté le (.*)$/,"Sources: $1 · accessed $2"],
@@ -330,6 +365,30 @@ function fxApplyLang(){
 }
 function toggleLang(){LANG=LANG==="fr"?"en":"fr";try{localStorage.setItem("pk_lang",LANG)}catch(x){}fxApplyLang()}
 
+/* ---- Fiche d'identite en anglais (conversion a l'affichage) ---- */
+/* Fiche d'identite en anglais : quand une valeur n'a pas de version anglaise saisie, on convertit les formes courantes
+   (oeufs -> eggs, ans -> years, virgule decimale -> point, regimes...). Affichage seulement : rien n'est modifie en base.
+   Les valeurs inhabituelles restent en francais : saisis-les dans « Version anglaise » (Modifier). */
+const FXID_MOTS=[
+ ["œufs?|oeufs?",x=>/s$/i.test(x)?"eggs":"egg"],["petits|jeunes","young"],["portées?",x=>/s$/i.test(x)?"litters":"litter"],
+ ["ans?",x=>/s$/i.test(x)?"years":"year"],["mois","months"],["jours?",x=>/s$/i.test(x)?"days":"day"],["semaines?",x=>/s$/i.test(x)?"weeks":"week"],
+ ["(?:carnivore|herbivore|omnivore|insectivore|piscivore|granivore|frugivore|nectarivore)s?",x=>x.replace(/s$/i,"").replace(/e$/i,"")+"ous"],
+ ["planctonophages?","planktivorous"],["d[ée]tritivores?","detritivorous"],["environ","about"],["env\\.","approx."]
+];
+function fxIdEn(k,v){
+ let s=String(v);
+ s=s.replace(/(\d),(?!\d{3}(?!\d))(\d)/g,"$1.$2");                       /* virgule decimale -> point (1,5 -> 1.5) ; 1,500 reste */
+ s=s.replace(/(\d)[ \u00a0\u202f](?=\d{3}(?!\d))/g,"$1,");                /* milliers : 20 000 -> 20,000 */
+ s=s.replace(/(\d)\s*à\s*(\d)/g,"$1 to $2");                              /* 6 à 7 -> 6 to 7 */
+ FXID_MOTS.forEach(m=>{
+  s=s.replace(new RegExp("(^|[^A-Za-zÀ-ÿŒœ])("+m[0]+")(?![A-Za-zÀ-ÿŒœ])","gi"),(t,p,x)=>{
+   let r=typeof m[1]==="function"?m[1](x):m[1];
+   if(/^[A-ZÀ-Ý]/.test(x))r=r.charAt(0).toUpperCase()+r.slice(1);
+   return p+r;
+  });
+ });
+ return s;
+}
 /* ================================================================== */
 /* 8. TEXTES : detection de l'anglais et affichage d'un bloc */
 const EN_MIN_CAR=60;   /* sous cette longueur, on ne devine pas la langue */
@@ -357,14 +416,91 @@ function fxBloc(t,v){
 
 /* ================================================================== */
 /* 9. GRILLE : chargement, cartes, rendu, cadrage de la photo */
+/* ---- Tri, groupes, pays, annee, compteurs ---- */
+/* Plus de numero : tri chronologique par date de premiere observation, compteurs (dont pays), filtres par groupe / pays / annee. */
+const FX_GRP=[
+ ["poissons","Poissons","Fish",FX2_FISH],["oiseaux","Oiseaux","Birds",["Aves"]],["mammiferes","Mammifères","Mammals",["Mammalia"]],
+ ["reptiles","Reptiles","Reptiles",["Reptilia","Squamata","Testudines","Crocodylia","Sphenodontia"]]/* GBIF donne parfois l'ordre a la place de la classe */,["amphibiens","Amphibiens","Amphibians",["Amphibia"]],["insectes","Insectes","Insects",["Insecta"]],
+ ["arachnides","Arachnides","Arachnids",["Arachnida"]],
+ ["crustaces","Crustacés","Crustaceans",["Malacostraca","Branchiopoda","Hexanauplia","Ostracoda","Thecostraca","Copepoda"]],
+ ["mollusques","Mollusques","Molluscs",["Gastropoda","Bivalvia","Cephalopoda","Polyplacophora","Scaphopoda"]],
+ ["echinodermes","Échinodermes","Echinoderms",["Asteroidea","Echinoidea","Ophiuroidea","Holothuroidea","Crinoidea"]],
+ ["cnidaires","Cnidaires","Cnidarians",["Anthozoa","Scyphozoa","Hydrozoa","Cubozoa","Staurozoa"]],
+ ["autres","Autres","Others",null]
+];
+function fxGroupe(e){const g=FX_GRP.find(x=>x[3]&&x[3].indexOf(e.classe)>=0);return g?g[0]:"autres"}
+function fxGrpNom(k){const g=FX_GRP.find(x=>x[0]===k);return g?T2(g[1],g[2]):k}
+function fxPremiere(id){
+ const l=(OBS[id]||[]).filter(o=>o.date_obs);if(!l.length)return null;
+ return l.slice().sort((a,b)=>String(a.date_obs).localeCompare(String(b.date_obs)))[0];
+}
+function fxPremiereTxt(id){const p=fxPremiere(id);return p?T2("Première observation : ","First seen: ")+fxDateTxt(p.date_obs,p.date_prec):""}
+function fxPaysCle(o){return o.pays_code?o.pays_code:(o.pays?"t:"+String(o.pays).trim().toLowerCase():"")}
+function fxPaysLib(o){return o.pays_code?fxPaysNom(o.pays_code):String(o.pays||"")}
+function fxSortGet(){try{const v=localStorage.getItem("pk_sort");if(["chrono","recent","alpha","taxo","ajout"].indexOf(v)>=0)return v}catch(x){}return "chrono"}
+function fxSortSet(v){try{localStorage.setItem("pk_sort",v)}catch(x){}}
+function fxFillSel(id,vide,opts,cur){
+ const s=document.querySelector(id);if(!s)return;
+ const ok=opts.some(o=>o[0]===cur);
+ const h=(vide==null?"":'<option value="">'+esc(vide)+'</option>')+opts.map(o=>'<option value="'+esc(o[0])+'"'+(ok&&o[0]===cur?" selected":"")+'>'+esc(o[1])+'</option>').join("");
+ if(s.dataset.h!==h){s.innerHTML=h;s.dataset.h=h}                         /* ne reconstruit que si la liste change (garde le menu ouvert) */
+}
+function fxTri(l,mode){
+ const lg=LANG==="en"?"en":"fr",nom=e=>String(e.nom_commun||e.nom_latin||""),A=l.slice();
+ if(mode==="ajout")return A;
+ if(mode==="alpha")return A.sort((a,b)=>nom(a).localeCompare(nom(b),lg));
+ if(mode==="taxo"){
+  const k=e=>[e.classe,e.ordre,e.famille,e.genre,e.nom_latin].map(x=>x||"");
+  return A.sort((a,b)=>{const x=k(a),y=k(b);for(let i=0;i<x.length;i++){const c=x[i].localeCompare(y[i],lg);if(c)return c}return 0});
+ }
+ const d=e=>{const p=fxPremiere(e.id);return p?String(p.date_obs):""},sens=mode==="recent"?-1:1;
+ return A.sort((a,b)=>{const x=d(a),y=d(b);if(x&&!y)return -1;if(!x&&y)return 1;if(x!==y)return sens*x.localeCompare(y);return nom(a).localeCompare(nom(b),lg)});   /* sans date : a la fin */
+}
+/* --- Taxonomie : completer classe / ordre / famille manquants (libelle de groupe vide sur la carte) ---
+   GBIF n'a pas de rang "classe" pour les poissons : on cherche dans sa lignee (/parents), puis dans iNaturalist.
+   Lance a chaque chargement ; ecrit en base si connecte ; les echecs sont memorises pour la session (FXRX). */
+async function fxClasseInat(name){
+ const st=await getJ("https://api.inaturalist.org/v1/taxa?q="+encodeURIComponent(name)+"&per_page=5");
+ const t=st&&(st.results||[]).find(x=>x.name===name);
+ if(!t)return null;
+ const dt=await getJ("https://api.inaturalist.org/v1/taxa/"+t.id);
+ const tx=dt&&dt.results&&dt.results[0];
+ const a=tx&&(tx.ancestors||[]).find(x=>x.rank==="class");
+ return a?a.name:(t.iconic_taxon_name==="Actinopterygii"?"Actinopterygii":null);
+}
+async function fxRepTaxo(){
+ if(window.FXRT)return;window.FXRT=1;
+ try{
+  window.FXRX=window.FXRX||{};
+  const nm=x=>x&&(x.canonicalName||x.scientificName);
+  const L0=ESP.filter(e=>e.gbif_key&&!e.classe&&!window.FXRX[e.gbif_key]);
+  let n=0;
+  for(const e of L0){
+   const d=await getJ("https://api.gbif.org/v1/species/"+e.gbif_key);
+   const pa=await getJ("https://api.gbif.org/v1/species/"+e.gbif_key+"/parents");
+   let cl=d&&d.class;
+   if(!cl&&Array.isArray(pa)){const p=pa.find(x=>x.rank==="CLASS")||pa.find(x=>FX2_FISH.indexOf(nm(x))>=0);cl=nm(p)}
+   if(!cl)cl=await fxClasseInat(e.nom_latin);
+   if(!cl){window.FXRX[e.gbif_key]=1;console.warn("[taxo] aucune classe trouvee pour",e.nom_latin,"| ancetres :",Array.isArray(pa)?pa.map(x=>x.rank+":"+nm(x)).join(" > "):"?");continue}
+   const ch={classe:cl};
+   if(d){if(!e.regne&&d.kingdom)ch.regne=d.kingdom;if(!e.phylum&&d.phylum)ch.phylum=d.phylum;if(!e.ordre&&d.order)ch.ordre=d.order;if(!e.famille&&d.family)ch.famille=d.family;if(!e.genre&&d.genus)ch.genre=d.genus}
+   Object.assign(e,ch);n++;
+   if(SES){const r=await SB.from("especes").update(ch).eq("id",e.id).select("id");
+    if(r.error)console.warn("[taxo] ecriture refusee",e.nom_latin,r.error.message);
+    else if(!r.data||!r.data.length)console.warn("[taxo] AUCUNE ligne modifiee pour",e.nom_latin,"(droits Supabase ?)");
+    else console.log("[taxo] enregistre en base :",e.nom_latin,"->",cl)}
+  }
+  if(n)render();
+ }catch(x){console.warn("[taxo]",x)}
+ window.FXRT=0;
+}
 async function load(){
  const a=await SB.from("especes").select("*").order("numero");
  const b=await SB.from("observations").select("*").order("date_obs",{ascending:false});
  const er=a.error||b.error;
  if(er){$("#grid").innerHTML=`<p style="padding:22px;color:#e88">Erreur Supabase : ${esc(er.message)}</p>`;return}
- ESP=a.data;OBS={};
+ ESP=a.data;OBS={};setTimeout(fxRepTaxo,0);
  b.data.forEach(o=>{(OBS[o.espece_id]=OBS[o.espece_id]||[]).push(o)});
- ESP.forEach((e,i)=>{e.numero=i+1});   /* numero affiche = rang reel (001, 002...) */
  render();
 }
 const card=e=>{
@@ -401,333 +537,55 @@ function render(){
 
 /* ================================================================== */
 /* 10. FICHE : ouverture, bandeau photo, navigation */
-/* ===== PATCH DATE-PRECISION ===== */
-/* Dates d'observation avec precision : jour, mois ou annee (colonne observations.date_prec). Le tri reste correct :
-   une date partielle est stockee au 1er du mois ou au 1er janvier. */
-const FX_MOIS={fr:["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"],
- en:["January","February","March","April","May","June","July","August","September","October","November","December"]};
-function fxDateTxt(d,prec){
- const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(String(d||""));if(!m)return "";
- const y=m[1],mo=+m[2],jr=+m[3],M=FX_MOIS[LANG==="en"?"en":"fr"];
- if(prec==="annee")return y;
- if(prec==="mois")return M[mo-1]+" "+y;
- return LANG==="en"?M[mo-1]+" "+jr+", "+y:jr+(jr===1?"er ":" ")+M[mo-1]+" "+y;
+function fxGo(id){const el=document.getElementById(id);if(!el)return;if(el.tagName==="DETAILS")el.open=true;el.scrollIntoView({behavior:"smooth",block:"start"})}
+function fxAll(o){document.querySelectorAll("#md details.fxd").forEach(d=>{d.open=o})}
+function ficheBase(id){
+ const e=ESP.find(x=>x.id===id);if(!e)return;
+ const ob=OBS[id]||[];
+ const fil=[e.classe,e.ordre,e.famille,e.genre].filter(Boolean).map(esc).join(" › ");
+ const idl=[["Statut UICN",e.uicn?pill(e.uicn)+" "+esc(UF[e.uicn])+(e.uicn_annee?" ("+e.uicn_annee+")":""):""]].concat(FX_ID.map(r=>[r[1],esc((e.extra||{})[r[0]])])).filter(r=>r[1]);
+ const taxo=FX_TXR.filter(r=>e[r[1]]).map(r=>`<tr><td>${r[0]}</td><td>${esc(e[r[1]])}</td></tr>`).join("")+`<tr><td>Espèce</td><td><i>${esc(e.nom_latin)}</i></td></tr>`;
+ const obs=ob.map(o=>`• ${esc(fxDateTxt(o.date_obs,o.date_prec)||"date ?")} · ${esc([o.lieu,fxPaysTxt(o)].filter(Boolean).join(", "))}${o.note?" — "+esc(o.note):""}`).join("\n")||"Aucune";
+ const iucn="https://www.iucnredlist.org/search?query="+encodeURIComponent(e.nom_latin)+"&searchType=species";
+ const S=[
+  ["fx_desc","Description",fxBloc("",e.biologie)],
+  ["fx_morpho","Morphologie",fxBloc("",e.morphologie)],
+  
+  ["fx_comp","Comportement",fxBloc("",e.comportement)+fxBloc("Alimentation",e.alimentation)+fxBloc("Reproduction",e.reproduction)],
+  ["fx_hab","Habitat et répartition",fxBloc("Habitat",e.habitat)+fxBloc("Répartition",e.repartition)+fxBloc("Migration",e.migration)+fxBloc("Rôle écologique",e.ecologie)],
+  ["fx_taxo","Taxonomie",`<table class="fxtx">${taxo}</table>`],
+  ["fx_arbre","Arbre du vivant",fxArbreHtml(e)],
+  ["fx_obs","Mes observations ("+ob.length+")",(SES?fxObsAdmin(ob,e.id):`<div class="fxp">${obs}</div>`)],
+  ["fx_carte","Carte",`<div id="fx_map"></div><div class="cr" style="margin-top:6px">Densité des observations GBIF (pas l'aire de répartition officielle). Pays colorés selon le nombre d'observations GBIF : plus foncé = plus d'observations, donc mieux observé, pas forcément plus abondant. Marqueurs turquoise : tes observations avec coordonnées. <a style="color:var(--acc)" href="${iucn}" target="_blank" rel="noopener">Voir la fiche UICN</a></div>`]
+ ].filter(x=>x[2]);
+ modal(`<div class="big" style="${e.photo_url?`background-image:url('${esc(e.photo_url)}')`:""}"></div>
+ <div class="cr">${e.photo_url?`Photo : ${esc(e.photo_auteur)} · ${esc(e.photo_licence)} · <a style="color:var(--acc)" href="${esc(e.photo_source)}" target="_blank" rel="noopener">source</a>`:""}</div>
+ <div class="no" style="margin-top:10px">${esc(fxPremiereTxt(e.id))}</div>
+ <h2>${esc(e.nom_commun||e.nom_latin)}</h2><div class="la" style="font-size:16px">${esc(e.nom_latin)}</div>
+ <div class="fxfil">${fil}</div>
+ <div class="fxid">${idl.map(r=>`<div><small>${esc(r[0])}</small>${r[1]}</div>`).join("")}</div>
+ <div class="fxn"><button class="all" onclick="fxAll(true)">Tout déplier</button><button class="all" onclick="fxAll(false)">Tout replier</button>${S.map(x=>`<button onclick="fxGo('${x[0]}')">${esc(x[1].replace(/ \(.*$/,""))}</button>`).join("")}</div>
+ ${S.map(x=>`<details class="fxd" id="${x[0]}" ${x[0]==="fx_desc"?"open":""}><summary>${esc(x[1])}</summary><div class="fxb">${x[2]}</div></details>`).join("")}
+ <div class="cr" style="margin-top:16px">Sources : ${esc(e.sources||"")} · consulté le ${esc(e.consulte_le||"?")}</div>
+ <div style="margin-top:14px;display:flex;gap:8px"><button onclick="closeAll()">Fermer</button>${SES?`<button class="pri" onclick="openEdit('${e.id}')">Modifier</button><button onclick="delEsp('${e.id}')" style="color:#e88">Supprimer</button>`:""}</div>`);
+ fxCarte(e,ob);
 }
-function fxDateFields(){
- const M=FX_MOIS[LANG==="en"?"en":"fr"];
- return '<div class="row"><input id="f_oy" type="number" min="1900" max="2100" placeholder="'+T2("Année (ex. 2019)","Year (e.g. 2019)")+'">'+
-  '<select id="f_om"><option value="">'+T2("Mois (si connu)","Month (if known)")+'</option>'+M.map((n,i)=>'<option value="'+(i+1)+'">'+n+'</option>').join("")+'</select>'+
-  '<input id="f_od" type="number" min="1" max="31" placeholder="'+T2("Jour (si connu)","Day (if known)")+'"></div>'+
-  '<div class="cr">'+T2("Laisse le mois et le jour vides si tu ne les connais pas : la date sera enregistrée comme « année » ou « mois ».","Leave month and day empty if unknown: the date is saved as “year” or “month”.")+'</div>';
+function ficheBandeau(id){
+ const e=ESP.find(x=>x.id===id),b=document.querySelector("#md .big");
+ if(!b)return;
+ if(!e||!e.photo_url){b.remove();return}
+ const u=esc(e.photo_url);
+ b.outerHTML='<div class="fxhero"><div class="fxbg" style="background-image:url(\''+u+'\')"></div><img class="fxph" src="'+u+'" alt="" onerror="this.parentNode.style.display=\'none\'"></div>';
 }
-function fxObsDate(){
- const v=id=>{const e=document.getElementById(id);return e?e.value.trim():""};
- const y=v("f_oy"),mo=v("f_om"),jr=v("f_od");
- if(!y&&!mo&&!jr)return{date:null,prec:"jour"};
- if(!/^\d{4}$/.test(y)||+y<1900||+y>2100)return{err:"Année invalide : 4 chiffres, entre 1900 et 2100 (ex. 2019)."};
- if(!mo&&jr)return{err:"Un jour est saisi sans mois : choisis le mois ou efface le jour."};
- if(!mo)return{date:y+"-01-01",prec:"annee"};
- const mm=String(mo).padStart(2,"0");
- if(!jr)return{date:y+"-"+mm+"-01",prec:"mois"};
- const J=+jr,d=new Date(Date.UTC(+y,+mo-1,J));
- if(!(J>=1)||d.getUTCMonth()!==+mo-1)return{err:"Ce jour n'existe pas pour ce mois."};
- return{date:y+"-"+mm+"-"+String(J).padStart(2,"0"),prec:"jour"};
+function openFiche(id){
+ FXCUR=id;
+ if(LANG==="en"){const bak=ESP;ESP=ESP.map(x=>x.id===id?fxView(x):x);try{ficheBase(id)}finally{ESP=bak}}
+ else ficheBase(id);
+ ficheBandeau(id);   /* banniere : photo entiere sur fond flou */
 }
-/* ===== FIN PATCH DATE-PRECISION ===== */
-/* ===== PATCH PAYS ===== */
-/* Pays choisi dans une liste (codes ISO 3166-1 + Kosovo XK). Les noms viennent du navigateur (Intl.DisplayNames) :
-   ils suivent la langue de l'interface. On enregistre le code (observations.pays_code) et le nom francais (observations.pays). */
-const FX_ISO=("AD AE AF AG AI AL AM AO AQ AR AS AT AU AW AX AZ BA BB BD BE BF BG BH BI BJ BL BM BN BO BQ BR BS BT BV BW BY BZ "+
- "CA CC CD CF CG CH CI CK CL CM CN CO CR CU CV CW CX CY CZ DE DJ DK DM DO DZ EC EE EG EH ER ES ET FI FJ FK FM FO FR "+
- "GA GB GD GE GF GG GH GI GL GM GN GP GQ GR GS GT GU GW GY HK HM HN HR HT HU ID IE IL IM IN IO IQ IR IS IT JE JM JO JP "+
- "KE KG KH KI KM KN KP KR KW KY KZ LA LB LC LI LK LR LS LT LU LV LY MA MC MD ME MF MG MH MK ML MM MN MO MP MQ MR MS MT MU MV MW MX MY MZ "+
- "NA NC NE NF NG NI NL NO NP NR NU NZ OM PA PE PF PG PH PK PL PM PN PR PS PT PW PY QA RE RO RS RU RW "+
- "SA SB SC SD SE SG SH SI SJ SK SL SM SN SO SR SS ST SV SX SY SZ TC TD TF TG TH TJ TK TL TM TN TO TR TT TV TW TZ "+
- "UA UG UM US UY UZ VA VC VE VG VI VN VU WF WS XK YE YT ZA ZM ZW").split(" ");
-const FX_PN={};
-function fxPaysNom(c,lang){
- lang=lang||(LANG==="en"?"en":"fr");
- if(!(lang in FX_PN)){try{FX_PN[lang]=new Intl.DisplayNames([lang],{type:"region"})}catch(x){FX_PN[lang]=null}}
- try{return(FX_PN[lang]&&FX_PN[lang].of(c))||c}catch(x){return c}
-}
-function fxPaysTxt(o){return o&&o.pays_code?fxPaysNom(o.pays_code):((o&&o.pays)||"")}
-function fxPaysSelect(){
- const lg=LANG==="en"?"en":"fr";
- const L=FX_ISO.map(c=>[c,fxPaysNom(c,lg)]).sort((a,b)=>a[1].localeCompare(b[1],lg));
- return '<select id="f_pc" onchange="fxPaysAutre()"><option value="">'+T2("Pays…","Country…")+'</option>'+
-  L.map(x=>'<option value="'+x[0]+'">'+esc(x[1])+'</option>').join("")+
-  '<option value="__autre">'+T2("Autre (saisie libre)…","Other (free text)…")+'</option></select>'+
-  '<input id="f_pays" placeholder="'+T2("Nom du pays ou de la région","Country or region name")+'" style="display:none">';
-}
-function fxPaysAutre(){const s=document.getElementById("f_pc"),i=document.getElementById("f_pays");if(s&&i)i.style.display=s.value==="__autre"?"":"none"}
-function fxObsPays(){
- const s=document.getElementById("f_pc"),i=document.getElementById("f_pays"),v=s?s.value:"";
- if(v==="__autre"){const t=i&&i.value.trim();return{pays:t||null,code:null}}
- if(v)return{pays:fxPaysNom(v,"fr"),code:v};
- return{pays:null,code:null};
-}
-/* ===== FIN PATCH PAYS ===== */
-/* ===== PATCH OBSERVATIONS ===== */
-/* Observations : ajouter, modifier, supprimer depuis la fiche (connecte). Reutilise les champs date (PATCH DATE-PRECISION) et pays (PATCH PAYS). */
-function fxObsLigne(o){
- return "• "+esc(fxDateTxt(o.date_obs,o.date_prec)||"date ?")+" · "+esc([o.lieu,fxPaysTxt(o)].filter(Boolean).join(", "))+(o.note?" — "+esc(o.note):"");
-}
-function fxObsAdmin(ob,espId){
- return '<div class="fxo-add"><button type="button" class="pri" onclick="openObsEdit(null,\''+espId+'\')">'+T2("+ Ajouter une observation","+ Add an observation")+'</button></div>'+
-  (ob.length?ob.map(o=>'<div class="fxo"><span>'+fxObsLigne(o)+'</span>'+
-   '<button type="button" class="fxob" onclick="openObsEdit(\''+o.id+'\',\''+espId+'\')">'+T2("Modifier","Edit")+'</button>'+
-   '<button type="button" class="fxob" style="color:#e88" onclick="delObs(\''+o.id+'\',\''+espId+'\')">'+T2("Supprimer","Delete")+'</button></div>').join(""):
-   '<div class="fxp">'+T2("Aucune","None")+'</div>');
-}
-function fxObsRemplir(o){
- const set=(id,v)=>{const el=document.getElementById(id);if(el&&v!=null)el.value=v};
- const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(o.date_obs||"");
- if(m){
-  set("f_oy",m[1]);
-  if(o.date_prec!=="annee")set("f_om",String(+m[2]));
-  if(!o.date_prec||o.date_prec==="jour")set("f_od",String(+m[3]));
- }
- set("f_lieu",o.lieu);
- if(o.pays_code)set("f_pc",o.pays_code);
- else if(o.pays){set("f_pc","__autre");set("f_pays",o.pays);fxPaysAutre()}
- set("f_lat",o.lat);set("f_lon",o.lon);set("f_note",o.note);
-}
-function openObsEdit(obsId,espId){
- if(!SES)return;
- const e=ESP.find(x=>x.id===espId);if(!e)return;
- const o=obsId?(OBS[espId]||[]).find(x=>x.id===obsId):null;
- if(obsId&&!o)return;
- modal('<h2>'+(o?"Modifier l'observation":"Ajouter une observation")+'</h2><div class="cr">'+esc(e.nom_commun||e.nom_latin)+'</div>'+
-  '<div class="sec"><div class="lab">Date</div>'+fxDateFields()+'<div class="row"><input id="f_lieu" placeholder="Lieu">'+fxPaysSelect()+'</div>'+
-  fxPickMapHtml()+
-  '<textarea id="f_note" rows="2" placeholder="Note"></textarea></div>'+
-  '<div style="margin-top:14px;display:flex;gap:8px"><button class="pri" onclick="saveObs(\''+(obsId||"")+'\',\''+espId+'\')">Enregistrer</button><button onclick="openFiche(\''+espId+'\')">Annuler</button></div>');
- if(o)fxObsRemplir(o);
- fxPickMapInit();
-}
-async function saveObs(obsId,espId){
- const od=fxObsDate();if(od.err){alert(od.err);return}
- const op=fxObsPays();
- const g=id=>{const e=document.getElementById(id);return e&&e.value.trim()?e.value.trim():null};
- const nm=id=>{const v=g(id);if(v==null)return null;const n=+v.replace(",",".");return isNaN(n)?NaN:n};
- const lat=nm("f_lat"),lon=nm("f_lon");
- if(Number.isNaN(lat)||Number.isNaN(lon)||(lat!=null&&Math.abs(lat)>90)||(lon!=null&&Math.abs(lon)>180)){alert("Latitude (-90 à 90) ou longitude (-180 à 180) invalide.");return}
- if((lat==null)!==(lon==null)){alert("Renseigne la latitude ET la longitude, ou aucune des deux.");return}
- const row={date_obs:od.date,date_prec:od.prec,lieu:g("f_lieu"),pays:op.pays,pays_code:op.code,lat:lat,lon:lon,note:g("f_note")};
- let r;
- if(obsId)r=await SB.from("observations").update(row).eq("id",obsId).select("id");
- else{row.espece_id=espId;r=await SB.from("observations").insert(row).select("id")}
- if(r.error)return alert("Erreur : "+r.error.message);
- if(!r.data||!r.data.length)return alert("Rien n'a été enregistré : droits insuffisants sur la table observations ?");
- await load();openFiche(espId);fxGo("fx_obs");
-}
-async function delObs(obsId,espId){
- const n=(OBS[espId]||[]).length;
- if(!confirm(n<=1?"Supprimer cette observation ? C'est la dernière : l'espèce restera dans ta liste, sans observation.":"Supprimer cette observation ?"))return;
- const r=await SB.from("observations").delete().eq("id",obsId).select("id");
- if(r.error)return alert("Erreur : "+r.error.message);
- if(!r.data||!r.data.length)return alert("Rien n'a été supprimé : droits insuffisants sur la table observations ?");
- await load();openFiche(espId);fxGo("fx_obs");
-}
-/* ===== FIN PATCH OBSERVATIONS ===== */
-/* ===== PATCH CARTE-POINT ===== */
-/* Poser le lieu d'une observation sur une carte : clic ou glisser du repere -> remplit latitude / longitude (champs replies). */
-function fxPickMapHtml(){
- return '<div class="lab">'+T2("Lieu sur la carte : clique pour poser le point, glisse le repère pour ajuster","Place on the map: click to drop the pin, drag it to adjust")+'</div>'+
-  '<div class="fxps"><input id="fx_ps" type="search" autocomplete="off" placeholder="'+T2("Chercher un lieu (ville, lac, parc…)","Search a place (city, lake, park…)")+'"><div id="fx_psl"></div></div><div id="fx_pm"></div>'+
-  '<div class="fxct"><label>'+T2("Fond","Base")+' <select id="fx_pmb"><option value="dark">'+T2("Sombre","Dark")+'</option><option value="plan">'+T2("Plan","Street")+'</option><option value="sat">'+T2("Satellite","Satellite")+'</option></select></label>'+
-  '<span class="cr" id="fx_pmc"></span><button type="button" id="fx_pme">'+T2("Effacer le point","Clear the point")+'</button></div>'+
-  '<details class="fxd" style="margin-top:6px"><summary>'+T2("Coordonnées","Coordinates")+'</summary><div class="fxb"><div class="row"><input id="f_lat" placeholder="Latitude (ex. 46.15)"><input id="f_lon" placeholder="Longitude (ex. -1.15)"></div></div></details>';
-}
-function fxPickMapInit(){
- const el=document.getElementById("fx_pm");if(!el)return;
- if(!window.L){el.innerHTML='<p style="padding:14px;color:#e88">'+T2("Carte indisponible (Leaflet non chargé).","Map unavailable (Leaflet not loaded).")+'</p>';return}
- try{if(window.FXPM)window.FXPM.remove()}catch(x){}
- const ES="https://server.arcgisonline.com/ArcGIS/rest/services/";
- const BM={
-  dark:{u:ES+"Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}",r:ES+"Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}"},
-  plan:{u:ES+"World_Street_Map/MapServer/tile/{z}/{y}/{x}"},
-  sat:{u:ES+"World_Imagery/MapServer/tile/{z}/{y}/{x}"}
- };
- const m=L.map(el,{minZoom:1,maxZoom:16,worldCopyJump:true,zoomSnap:1}).setView([20,10],1);
- window.FXPM=m;
- m.scrollWheelZoom.disable();                      /* la molette fait defiler la fenetre ; elle zoome seulement apres un clic dans la carte */
- m.on("focus",()=>m.scrollWheelZoom.enable());m.on("blur",()=>m.scrollWheelZoom.disable());
- let cur=null,curR=null,fb=false;
- const setBM=k=>{
-  if(cur)m.removeLayer(cur);if(curR)m.removeLayer(curR);
-  const b=BM[k];
-  cur=L.tileLayer(b.u,{attribution:"Tiles © Esri",maxZoom:16});
-  cur.on("tileerror",()=>{if(fb)return;fb=true;m.removeLayer(cur);cur=L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{attribution:"© OpenStreetMap",className:k==="dark"?"dk":"",maxZoom:16}).addTo(m);cur.bringToBack()});
-  cur.addTo(m);cur.bringToBack();
-  curR=b.r?L.tileLayer(b.r,{maxZoom:16}).addTo(m):null;
- };
- setBM("dark");
- const lat=document.getElementById("f_lat"),lon=document.getElementById("f_lon"),info=document.getElementById("fx_pmc");
- let pin=null;
- const dire=()=>{if(info)info.textContent=(lat.value&&lon.value)?lat.value+" ; "+lon.value:T2("Aucun point posé","No point set")};
- const poser=(ll,centrer)=>{
-  const w=ll.wrap?ll.wrap():ll,la=+(+w.lat).toFixed(5),lo=+(+w.lng).toFixed(5);
-  lat.value=la;lon.value=lo;dire();
-  if(pin)pin.setLatLng([la,lo]);
-  else{
-   pin=L.marker([la,lo],{draggable:true,icon:L.divIcon({className:"",html:'<div class="fxpin"></div>',iconSize:[14,14],iconAnchor:[7,7]})}).addTo(m);
-   pin.on("dragend",()=>poser(pin.getLatLng()));
-  }
-  if(centrer)m.setView([la,lo],Math.max(m.getZoom(),8));
- };
- const lire=()=>{const a=parseFloat(String(lat.value).replace(",",".")),o=parseFloat(String(lon.value).replace(",","."));return(isFinite(a)&&isFinite(o)&&Math.abs(a)<=90&&Math.abs(o)<=180)?[a,o]:null};
- m.on("click",ev=>poser(ev.latlng,false));
- window.FXPM_VERS=(la,lo,ext)=>{   /* appelee par la recherche de lieu */
-  poser(L.latLng(la,lo),false);
-  if(ext&&ext.length===4){try{m.fitBounds([[ext[3],ext[0]],[ext[1],ext[2]]],{maxZoom:14,padding:[20,20]});return}catch(x){}}
-  m.setView([la,lo],12);
- };
- const saisie=()=>{const p=lire();if(p)poser(L.latLng(p[0],p[1]),true);else if(info)info.textContent=(lat.value||lon.value)?T2("Coordonnées invalides","Invalid coordinates"):T2("Aucun point posé","No point set")};
- lat.addEventListener("change",saisie);lon.addEventListener("change",saisie);
- document.getElementById("fx_pmb").addEventListener("change",ev=>setBM(ev.target.value));
- document.getElementById("fx_pme").addEventListener("click",()=>{lat.value="";lon.value="";if(pin){m.removeLayer(pin);pin=null}dire()});
- const p0=lire();
- if(p0)poser(L.latLng(p0[0],p0[1]),true);else dire();   /* observation existante : on part de son point */
- setTimeout(()=>{try{m.invalidateSize()}catch(x){}},120);
- fxLieuInit();
-}
-/* ===== FIN PATCH CARTE-POINT ===== */
-/* ===== PATCH LIEU-RECHERCHE ===== */
-/* Recherche de lieu avec suggestions (Photon, fait pour la frappe) ; repli sur le service OpenStreetMap (Nominatim) UNIQUEMENT sur clic :
-   sa politique interdit l'autocompletion. Un lieu choisi pose le point sur la carte, remplit « Lieu » et selectionne le pays. */
-const FX_LS={cache:{}};
-function fxLieuLabel(nom,ville,region){return[nom,ville,region].filter((x,i,t)=>x&&t.indexOf(x)===i).join(", ")}
-async function fxLieuPhoton(q){
- const lg=LANG==="en"?"en":"fr";
- const r=await fetch("https://photon.komoot.io/api/?q="+encodeURIComponent(q)+"&limit=6&lang="+lg);
- if(!r.ok)throw new Error("photon "+r.status);
- const d=await r.json();
- return(d.features||[]).filter(f=>f.geometry&&f.geometry.coordinates).map(f=>{
-  const p=f.properties||{},c=f.geometry.coordinates,label=fxLieuLabel(p.name||p.street||"",p.city||p.county||p.district||"",p.state||"");
-  return{lat:+c[1],lon:+c[0],nom:p.name||p.street||label,label:label,cc:String(p.countrycode||"").toUpperCase(),pays:p.country||"",ext:(p.extent&&p.extent.length===4)?p.extent:null};
- });
-}
-async function fxLieuNomi(q){
- const lg=LANG==="en"?"en":"fr";
- const r=await fetch("https://nominatim.openstreetmap.org/search?q="+encodeURIComponent(q)+"&format=jsonv2&limit=6&addressdetails=1&accept-language="+lg);
- if(!r.ok)throw new Error("nominatim "+r.status);
- const d=await r.json();
- return(d||[]).map(x=>{
-  const a=x.address||{},nom=x.name||String(x.display_name||"").split(",")[0],label=fxLieuLabel(nom,a.city||a.town||a.village||a.municipality||a.county||"",a.state||""),b=x.boundingbox;
-  return{lat:+x.lat,lon:+x.lon,nom:nom,label:label,cc:String(a.country_code||"").toUpperCase(),pays:a.country||"",ext:(b&&b.length===4)?[+b[2],+b[1],+b[3],+b[0]]:null};
- });
-}
-function fxLieuChoisir(r){
- if(!r)return;
- const lieu=document.getElementById("f_lieu");if(lieu)lieu.value=r.label||r.nom;
- const sel=document.getElementById("f_pc");
- if(sel){
-  if(r.cc&&FX_ISO.indexOf(r.cc)>=0){sel.value=r.cc;fxPaysAutre()}
-  else if(r.pays){sel.value="__autre";fxPaysAutre();const t=document.getElementById("f_pays");if(t)t.value=r.pays}
- }
- if(window.FXPM_VERS)window.FXPM_VERS(r.lat,r.lon,r.ext);
-}
-function fxLieuInit(){
- const inp=document.getElementById("fx_ps"),box=document.getElementById("fx_psl");if(!inp||!box)return;
- let tmr=null,seq=0,items=[];
- const montrer=h=>{box.innerHTML=h;box.style.display=h?"block":"none"};
- const osm='<div data-nomi="1"><b>'+T2("Chercher avec OpenStreetMap","Search with OpenStreetMap")+'</b><small>'+T2("autre service, sur clic seulement","other service, on click only")+'</small></div>';
- const lancer=async(q,nomi)=>{
-  const n=++seq,cle=(nomi?"n:":"p:")+q;
-  montrer('<div class="cr" style="padding:7px 10px">'+T2("Recherche…","Searching…")+'</div>');
-  let res=FX_LS.cache[cle],err=null;
-  if(!res){try{res=await(nomi?fxLieuNomi(q):fxLieuPhoton(q));FX_LS.cache[cle]=res}catch(x){err=x}}
-  if(n!==seq)return;                                  /* reponse perimee : une recherche plus recente est partie */
-  if(err){montrer('<div class="cr" style="padding:7px 10px">'+T2("Service de recherche indisponible. Pose le point sur la carte.","Search service unavailable. Drop the pin on the map.")+'</div>'+(nomi?"":osm));return}
-  items=res;
-  if(!res.length){montrer('<div class="cr" style="padding:7px 10px">'+T2("Aucun lieu trouvé. Pose le point sur la carte.","No place found. Drop the pin on the map.")+'</div>'+(nomi?"":osm));return}
-  montrer(res.map((r,i)=>'<div data-i="'+i+'">'+esc(r.nom)+'<small>'+esc([r.label,r.pays].filter(Boolean).join(" · "))+'</small></div>').join("")+(nomi?"":osm));
- };
- inp.addEventListener("input",()=>{
-  clearTimeout(tmr);const q=inp.value.trim();
-  if(q.length<3){seq++;montrer("");return}
-  tmr=setTimeout(()=>lancer(q,false),400);            /* attend la fin de la frappe */
- });
- inp.addEventListener("keydown",ev=>{
-  if(ev.key!=="Enter")return;
-  ev.preventDefault();clearTimeout(tmr);
-  const q=inp.value.trim();if(q.length>=2)lancer(q,false);
- });
- box.addEventListener("mousedown",ev=>ev.preventDefault());   /* garde le focus : le clic n'est pas avale par le blur */
- box.addEventListener("click",ev=>{
-  const d=ev.target.closest("[data-i],[data-nomi]");if(!d)return;
-  if(d.dataset.nomi){const q=inp.value.trim();if(q.length>=2)lancer(q,true);return}
-  const r=items[+d.dataset.i];fxLieuChoisir(r);inp.value=r?r.nom:inp.value;montrer("");
- });
- inp.addEventListener("blur",()=>setTimeout(()=>montrer(""),150));
-}
-/* ===== FIN PATCH LIEU-RECHERCHE ===== */
-/* ===== PATCH IDENTITE-EN ===== */
-/* Fiche d'identite en anglais : quand une valeur n'a pas de version anglaise saisie, on convertit les formes courantes
-   (oeufs -> eggs, ans -> years, virgule decimale -> point, regimes...). Affichage seulement : rien n'est modifie en base.
-   Les valeurs inhabituelles restent en francais : saisis-les dans « Version anglaise » (Modifier). */
-const FXID_MOTS=[
- ["œufs?|oeufs?",x=>/s$/i.test(x)?"eggs":"egg"],["petits|jeunes","young"],["portées?",x=>/s$/i.test(x)?"litters":"litter"],
- ["ans?",x=>/s$/i.test(x)?"years":"year"],["mois","months"],["jours?",x=>/s$/i.test(x)?"days":"day"],["semaines?",x=>/s$/i.test(x)?"weeks":"week"],
- ["(?:carnivore|herbivore|omnivore|insectivore|piscivore|granivore|frugivore|nectarivore)s?",x=>x.replace(/s$/i,"").replace(/e$/i,"")+"ous"],
- ["planctonophages?","planktivorous"],["d[ée]tritivores?","detritivorous"],["environ","about"],["env\\.","approx."]
-];
-function fxIdEn(k,v){
- let s=String(v);
- s=s.replace(/(\d),(?!\d{3}(?!\d))(\d)/g,"$1.$2");                       /* virgule decimale -> point (1,5 -> 1.5) ; 1,500 reste */
- s=s.replace(/(\d)[ \u00a0\u202f](?=\d{3}(?!\d))/g,"$1,");                /* milliers : 20 000 -> 20,000 */
- s=s.replace(/(\d)\s*à\s*(\d)/g,"$1 to $2");                              /* 6 à 7 -> 6 to 7 */
- FXID_MOTS.forEach(m=>{
-  s=s.replace(new RegExp("(^|[^A-Za-zÀ-ÿŒœ])("+m[0]+")(?![A-Za-zÀ-ÿŒœ])","gi"),(t,p,x)=>{
-   let r=typeof m[1]==="function"?m[1](x):m[1];
-   if(/^[A-ZÀ-Ý]/.test(x))r=r.charAt(0).toUpperCase()+r.slice(1);
-   return p+r;
-  });
- });
- return s;
-}
-/* ===== FIN PATCH IDENTITE-EN ===== */
-/* ===== PATCH TRI-FILTRES ===== */
-/* Plus de numero : tri chronologique par date de premiere observation, compteurs (dont pays), filtres par groupe / pays / annee. */
-const FX_GRP=[
- ["poissons","Poissons","Fish",FX2_FISH],["oiseaux","Oiseaux","Birds",["Aves"]],["mammiferes","Mammifères","Mammals",["Mammalia"]],
- ["reptiles","Reptiles","Reptiles",["Reptilia"]],["amphibiens","Amphibiens","Amphibians",["Amphibia"]],["insectes","Insectes","Insects",["Insecta"]],
- ["arachnides","Arachnides","Arachnids",["Arachnida"]],
- ["crustaces","Crustacés","Crustaceans",["Malacostraca","Branchiopoda","Hexanauplia","Ostracoda","Thecostraca","Copepoda"]],
- ["mollusques","Mollusques","Molluscs",["Gastropoda","Bivalvia","Cephalopoda","Polyplacophora","Scaphopoda"]],
- ["autres","Autres","Others",null]
-];
-function fxGroupe(e){const g=FX_GRP.find(x=>x[3]&&x[3].indexOf(e.classe)>=0);return g?g[0]:"autres"}
-function fxGrpNom(k){const g=FX_GRP.find(x=>x[0]===k);return g?T2(g[1],g[2]):k}
-function fxPremiere(id){
- const l=(OBS[id]||[]).filter(o=>o.date_obs);if(!l.length)return null;
- return l.slice().sort((a,b)=>String(a.date_obs).localeCompare(String(b.date_obs)))[0];
-}
-function fxPremiereTxt(id){const p=fxPremiere(id);return p?T2("Première observation : ","First seen: ")+fxDateTxt(p.date_obs,p.date_prec):""}
-function fxPaysCle(o){return o.pays_code?o.pays_code:(o.pays?"t:"+String(o.pays).trim().toLowerCase():"")}
-function fxPaysLib(o){return o.pays_code?fxPaysNom(o.pays_code):String(o.pays||"")}
-function fxSortGet(){try{const v=localStorage.getItem("pk_sort");if(["chrono","recent","alpha","taxo","ajout"].indexOf(v)>=0)return v}catch(x){}return "chrono"}
-function fxSortSet(v){try{localStorage.setItem("pk_sort",v)}catch(x){}}
-function fxFillSel(id,vide,opts,cur){
- const s=document.querySelector(id);if(!s)return;
- const ok=opts.some(o=>o[0]===cur);
- const h=(vide==null?"":'<option value="">'+esc(vide)+'</option>')+opts.map(o=>'<option value="'+esc(o[0])+'"'+(ok&&o[0]===cur?" selected":"")+'>'+esc(o[1])+'</option>').join("");
- if(s.dataset.h!==h){s.innerHTML=h;s.dataset.h=h}                         /* ne reconstruit que si la liste change (garde le menu ouvert) */
-}
-function fxTri(l,mode){
- const lg=LANG==="en"?"en":"fr",nom=e=>String(e.nom_commun||e.nom_latin||""),A=l.slice();
- if(mode==="ajout")return A;
- if(mode==="alpha")return A.sort((a,b)=>nom(a).localeCompare(nom(b),lg));
- if(mode==="taxo"){
-  const k=e=>[e.classe,e.ordre,e.famille,e.genre,e.nom_latin].map(x=>x||"");
-  return A.sort((a,b)=>{const x=k(a),y=k(b);for(let i=0;i<x.length;i++){const c=x[i].localeCompare(y[i],lg);if(c)return c}return 0});
- }
- const d=e=>{const p=fxPremiere(e.id);return p?String(p.date_obs):""},sens=mode==="recent"?-1:1;
- return A.sort((a,b)=>{const x=d(a),y=d(b);if(x&&!y)return -1;if(!x&&y)return 1;if(x!==y)return sens*x.localeCompare(y);return nom(a).localeCompare(nom(b),lg)});   /* sans date : a la fin */
-}
-/* ===== FIN PATCH TRI-FILTRES ===== */
-/* ===== PATCH ARBRE-FICHE ===== */
+
+/* ================================================================== */
+/* 11. ARBRE DU VIVANT : cadre integre dans la fiche */
 /* Section « Arbre du vivant » de la fiche : l'arbre (site separe) s'affiche dans un cadre UNIQUEMENT quand la section est depliee ;
    replier la section DECHARGE completement le cadre. Il s'ouvre deja sur le groupe de l'espece, chemin surligne depuis la racine.
    Les noms (espece, genre, famille, ordre, classe...) sont envoyes du plus precis au plus general : l'arbre retient le premier qu'il connait. */
@@ -792,56 +650,9 @@ document.addEventListener("keydown",ev=>{    /* Echap : ferme le plein ecran SEU
  const ov=document.getElementById("fx_arov");if(!ov)return;
  ev.stopImmediatePropagation();ev.preventDefault();ov._fermer&&ov._fermer();
 },true);
-/* ===== FIN PATCH ARBRE-FICHE ===== */
-function fxGo(id){const el=document.getElementById(id);if(!el)return;if(el.tagName==="DETAILS")el.open=true;el.scrollIntoView({behavior:"smooth",block:"start"})}
-function fxAll(o){document.querySelectorAll("#md details.fxd").forEach(d=>{d.open=o})}
-function ficheBase(id){
- const e=ESP.find(x=>x.id===id);if(!e)return;
- const ob=OBS[id]||[];
- const fil=[e.classe,e.ordre,e.famille,e.genre].filter(Boolean).map(esc).join(" › ");
- const idl=[["Statut UICN",e.uicn?pill(e.uicn)+" "+esc(UF[e.uicn])+(e.uicn_annee?" ("+e.uicn_annee+")":""):""]].concat(FX_ID.map(r=>[r[1],esc((e.extra||{})[r[0]])])).filter(r=>r[1]);
- const taxo=FX_TXR.filter(r=>e[r[1]]).map(r=>`<tr><td>${r[0]}</td><td>${esc(e[r[1]])}</td></tr>`).join("")+`<tr><td>Espèce</td><td><i>${esc(e.nom_latin)}</i></td></tr>`;
- const obs=ob.map(o=>`• ${esc(fxDateTxt(o.date_obs,o.date_prec)||"date ?")} · ${esc([o.lieu,fxPaysTxt(o)].filter(Boolean).join(", "))}${o.note?" — "+esc(o.note):""}`).join("\n")||"Aucune";
- const iucn="https://www.iucnredlist.org/search?query="+encodeURIComponent(e.nom_latin)+"&searchType=species";
- const S=[
-  ["fx_desc","Description",fxBloc("",e.biologie)],
-  ["fx_morpho","Morphologie",fxBloc("",e.morphologie)],
-  
-  ["fx_comp","Comportement",fxBloc("",e.comportement)+fxBloc("Alimentation",e.alimentation)+fxBloc("Reproduction",e.reproduction)],
-  ["fx_hab","Habitat et répartition",fxBloc("Habitat",e.habitat)+fxBloc("Répartition",e.repartition)+fxBloc("Migration",e.migration)+fxBloc("Rôle écologique",e.ecologie)],
-  ["fx_taxo","Taxonomie",`<table class="fxtx">${taxo}</table>`],
-  ["fx_arbre","Arbre du vivant",fxArbreHtml(e)],
-  ["fx_obs","Mes observations ("+ob.length+")",(SES?fxObsAdmin(ob,e.id):`<div class="fxp">${obs}</div>`)],
-  ["fx_carte","Carte",`<div id="fx_map"></div><div class="cr" style="margin-top:6px">Densité des observations GBIF (pas l'aire de répartition officielle). Pays colorés selon le nombre d'observations GBIF : plus foncé = plus d'observations, donc mieux observé, pas forcément plus abondant. Marqueurs turquoise : tes observations avec coordonnées. <a style="color:var(--acc)" href="${iucn}" target="_blank" rel="noopener">Voir la fiche UICN</a></div>`]
- ].filter(x=>x[2]);
- modal(`<div class="big" style="${e.photo_url?`background-image:url('${esc(e.photo_url)}')`:""}"></div>
- <div class="cr">${e.photo_url?`Photo : ${esc(e.photo_auteur)} · ${esc(e.photo_licence)} · <a style="color:var(--acc)" href="${esc(e.photo_source)}" target="_blank" rel="noopener">source</a>`:""}</div>
- <div class="no" style="margin-top:10px">${esc(fxPremiereTxt(e.id))}</div>
- <h2>${esc(e.nom_commun||e.nom_latin)}</h2><div class="la" style="font-size:16px">${esc(e.nom_latin)}</div>
- <div class="fxfil">${fil}</div>
- <div class="fxid">${idl.map(r=>`<div><small>${esc(r[0])}</small>${r[1]}</div>`).join("")}</div>
- <div class="fxn"><button class="all" onclick="fxAll(true)">Tout déplier</button><button class="all" onclick="fxAll(false)">Tout replier</button>${S.map(x=>`<button onclick="fxGo('${x[0]}')">${esc(x[1].replace(/ \(.*$/,""))}</button>`).join("")}</div>
- ${S.map(x=>`<details class="fxd" id="${x[0]}" ${x[0]==="fx_desc"?"open":""}><summary>${esc(x[1])}</summary><div class="fxb">${x[2]}</div></details>`).join("")}
- <div class="cr" style="margin-top:16px">Sources : ${esc(e.sources||"")} · consulté le ${esc(e.consulte_le||"?")}</div>
- <div style="margin-top:14px;display:flex;gap:8px"><button onclick="closeAll()">Fermer</button>${SES?`<button class="pri" onclick="openEdit('${e.id}')">Modifier</button><button onclick="delEsp('${e.id}')" style="color:#e88">Supprimer</button>`:""}</div>`);
- fxCarte(e,ob);
-}
-function ficheBandeau(id){
- const e=ESP.find(x=>x.id===id),b=document.querySelector("#md .big");
- if(!b)return;
- if(!e||!e.photo_url){b.remove();return}
- const u=esc(e.photo_url);
- b.outerHTML='<div class="fxhero"><div class="fxbg" style="background-image:url(\''+u+'\')"></div><img class="fxph" src="'+u+'" alt="" onerror="this.parentNode.style.display=\'none\'"></div>';
-}
-function openFiche(id){
- FXCUR=id;
- if(LANG==="en"){const bak=ESP;ESP=ESP.map(x=>x.id===id?fxView(x):x);try{ficheBase(id)}finally{ESP=bak}}
- else ficheBase(id);
- ficheBandeau(id);   /* banniere : photo entiere sur fond flou */
-}
 
 /* ================================================================== */
-/* 11. CARTE : Leaflet, pays colores par nombre d'observations GBIF, observations perso */
+/* 12. CARTE : fonds communs (FX_FONDS), zoom continu, cadrage monde, carte de la fiche (pays colores par nombre d'observations GBIF, observations perso) */
 const FX_GEO="https://cdn.jsdelivr.net/gh/nvkelso/natural-earth-vector@master/geojson/ne_110m_admin_0_countries.geojson";
 let FX_GEOC=null;
 async function fxGeo(){
@@ -852,6 +663,62 @@ async function fxGeo(){
 function fxIso(p){const ok=v=>v&&v!=="-99"&&v!=="-1";return ok(p.ISO_A2_EH)?p.ISO_A2_EH:(ok(p.ISO_A2)?p.ISO_A2:(ok(p.WB_A2)?p.WB_A2:null))}
 document.addEventListener("toggle",ev=>{const t=ev.target;if(t&&t.id==="fx_carte"&&t.open&&window.FXM)setTimeout(()=>{try{window.FXM.invalidateSize()}catch(x){}},60)},true);
 document.addEventListener("toggle",ev=>{const t=ev.target;if(t&&t.id==="fx_carte"&&t.open&&window.FXF)setTimeout(()=>{if(window.FXF)window.FXF()},80)},true);
+/* --- Cadrage "monde" commun aux trois cartes (fiche, formulaire d'observation, carte globale) ---
+   Le monde REMPLIT la fenetre (aucune bande) et n'est jamais repete (noWrap + maxBounds). Le zoom minimum est exact : les cartes ont zoomSnap:0
+   (avec 0.25 Leaflet arrondissait au quart superieur : monde rogne a droite, Nouvelle-Zelande hors cadre). */
+function fxHautCarte(w){return Math.max(280,Math.min(Math.round(w*0.6),Math.round(window.innerHeight*0.6)))}
+function fxZMonde(m,WB){const so=m.options.zoomSnap;m.setMinZoom(0);m.options.zoomSnap=0;const z=m.getBoundsZoom(WB,true);m.options.zoomSnap=so;return isFinite(z)?z:m.getBoundsZoom(WB,false)}
+/* centre de la vue monde : bande -52 / 84 de latitude ; si la fenetre est trop basse on rogne l'Arctique et on garde la Nouvelle-Zelande */
+function fxCentreMonde(m){const z=m.getMinZoom(),s=m.getSize(),pb=m.project(L.latLng(-52,0),z),pt=m.project(L.latLng(84,0),z);return m.unproject(L.point(pb.x,Math.max(pb.y-s.y/2,(pt.y+pb.y)/2)),z)}
+/* --- Fonds de carte (Esri) et zoom continu, communs aux trois cartes (fiche, formulaire d'observation, carte globale) ---
+   n = zoom natif maximal des tuiles (au-dela, Leaflet agrandit). r = couche de noms (villes, frontieres). */
+const FX_ES="https://server.arcgisonline.com/ArcGIS/rest/services/";
+const FX_FONDS={
+ dark:{fr:"Sombre",en:"Dark",n:16,u:FX_ES+"Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}",r:FX_ES+"Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}"},
+ ocean:{fr:"Océans",en:"Oceans",n:10,u:FX_ES+"Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}",r:FX_ES+"Ocean/World_Ocean_Reference/MapServer/tile/{z}/{y}/{x}"},
+ relief:{fr:"Relief",en:"Relief",n:10,u:FX_ES+"World_Shaded_Relief/MapServer/tile/{z}/{y}/{x}"},
+ sat:{fr:"Satellite",en:"Satellite",n:16,u:FX_ES+"World_Imagery/MapServer/tile/{z}/{y}/{x}"},
+ hyb:{fr:"Satellite + noms",en:"Satellite + labels",n:16,u:FX_ES+"World_Imagery/MapServer/tile/{z}/{y}/{x}",r:FX_ES+"Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}"},
+ plan:{fr:"Plan (villes, routes)",en:"Street map",n:16,u:FX_ES+"World_Street_Map/MapServer/tile/{z}/{y}/{x}"}
+};
+function fxFondsOptions(sel){return Object.keys(FX_FONDS).map(k=>'<option value="'+k+'"'+(k===sel?" selected":"")+'>'+T2(FX_FONDS[k].fr,FX_FONDS[k].en)+'</option>').join("")}
+/* Renvoie la fonction set(cle) qui change le fond de la carte m. Haute definition (retina) ; couche de secours floue (zoom <= 3, quelques dizaines de tuiles)
+   toujours chargee sous la couche detaillee : floue au lieu de noire pendant le zoom. */
+function fxFondsInit(m){
+ let cur=null,curR=null,und=null,fb=false;
+ if(!m.getPane("ref")){m.createPane("ref").style.zIndex=425;m.getPane("ref").style.pointerEvents="none"}
+ return k=>{
+  if(cur)m.removeLayer(cur);if(curR)m.removeLayer(curR);if(und){m.removeLayer(und);und=null}
+  const b=FX_FONDS[k];
+  und=L.tileLayer(b.u,{noWrap:true,maxZoom:16,maxNativeZoom:3,zIndex:1}).addTo(m);
+  cur=L.tileLayer(b.u,{attribution:"Tiles © Esri",noWrap:true,detectRetina:true,maxZoom:16,maxNativeZoom:b.n,zIndex:2,keepBuffer:4});
+  cur.on("tileerror",()=>{if(fb)return;fb=true;m.removeLayer(cur);cur=L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{attribution:"© OpenStreetMap contributors",className:k==="dark"?"dk":"",noWrap:true,maxZoom:19}).addTo(m);cur.bringToBack()});
+  cur.addTo(m);cur.bringToBack();
+  und.setZIndex(-5);   /* bringToBack() met cur sous la couche de secours : on remet cette derniere tout en bas */
+  curR=b.r?L.tileLayer(b.r,{noWrap:true,detectRetina:true,maxZoom:16,maxNativeZoom:b.n,pane:"ref"}).addTo(m):null;
+ };
+}
+/* Zoom continu : le pincement du pave tactile arrive comme "molette + Ctrl". On cumule le mouvement et on l'applique par pas lisses, centre sur le curseur.
+   molette() (facultatif) dit si la molette SIMPLE doit zoomer (sinon la page defile) ; le pincement zoome toujours. Les boutons + / - de Leaflet restent disponibles. */
+const FX_ZOOM={pincement:0.03,souris:0.01,deuxDoigts:0.018,pasMax:0.5};   /* sensibilite ; pasMax = niveaux de zoom max par image (les tuiles ont le temps de suivre) */
+function fxZoomContinu(m,el,molette){
+ const S={acc:0,pt:null,raf:0};
+ const pas=()=>{
+  S.raf=0;
+  const st=Math.max(-FX_ZOOM.pasMax,Math.min(FX_ZOOM.pasMax,S.acc));S.acc-=st;
+  const z=Math.max(m.getMinZoom(),Math.min(m.getMaxZoom(),m.getZoom()+st));
+  try{m.setZoomAround(S.pt,z,{animate:false})}catch(x){}
+  if(Math.abs(S.acc)>0.01)S.raf=requestAnimationFrame(pas);else S.acc=0;
+ };
+ el.addEventListener("wheel",ev=>{
+  if(!ev.ctrlKey&&molette&&!molette())return;
+  ev.preventDefault();ev.stopPropagation();
+  const dy=ev.deltaY*(ev.deltaMode===1?33:(ev.deltaMode===2?400:1));
+  const k=ev.ctrlKey?FX_ZOOM.pincement:(Math.abs(dy)>=50?FX_ZOOM.souris:FX_ZOOM.deuxDoigts);   /* pincement / molette de souris / deux doigts */
+  S.acc+=-dy*k;S.pt=m.mouseEventToContainerPoint(ev);
+  if(!S.raf)S.raf=requestAnimationFrame(pas);
+ },{passive:false,capture:true});
+}
 function fxCarte(e,ob){
  const el=document.getElementById("fx_map");if(!el)return;
  if(!window.L){el.innerHTML='<p style="padding:14px;color:#e88">'+T2("Carte indisponible (Leaflet non chargé).","Map unavailable (Leaflet not loaded).")+'</p>';return}
@@ -859,30 +726,16 @@ function fxCarte(e,ob){
  const ZMAX_OBS=6,SEUIL_PROCHE=2000;   /* zoom max / distance (m) en dessous de laquelle on centre sur un point */
  const OUVERTURE_MONDE=true;           /* true : la carte s'ouvre sur le monde entier ; false : cadree sur tes observations */
  const ptsV=(ob||[]).filter(o=>o&&o.lat!=null&&o.lon!=null&&isFinite(+o.lat)&&isFinite(+o.lon));
- const ES="https://server.arcgisonline.com/ArcGIS/rest/services/";
- const BM={
-  dark:{n:T2("Sombre","Dark"),u:ES+"Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}",r:ES+"Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}"},
-  ocean:{n:T2("Océans","Oceans"),u:ES+"Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}",r:ES+"Ocean/World_Ocean_Reference/MapServer/tile/{z}/{y}/{x}"},
-  relief:{n:T2("Relief","Relief"),u:ES+"World_Shaded_Relief/MapServer/tile/{z}/{y}/{x}"},
-  sat:{n:T2("Satellite","Satellite"),u:ES+"World_Imagery/MapServer/tile/{z}/{y}/{x}"}
- };
- const m=L.map(el,{minZoom:0,maxZoom:9,zoomSnap:0.25,zoomDelta:1,keyboard:false}).setView([20,10],1);
+ const m=L.map(el,{minZoom:0,maxZoom:14,zoomSnap:0,zoomDelta:1,keyboard:false}).setView([20,10],1);
  window.FXM=m;window.FXF=null;
  [["pays",410],["dens",420],["ref",425],["obs",430]].forEach(a=>{m.createPane(a[0]).style.zIndex=a[1]});
  m.getPane("ref").style.pointerEvents="none";
- let cur=null,curR=null,fb=false;
- const setBM=k=>{
-  if(cur)m.removeLayer(cur);
-  if(curR)m.removeLayer(curR);
-  const b=BM[k];
-  cur=L.tileLayer(b.u,{attribution:"Tiles © Esri",noWrap:true,detectRetina:true,maxZoom:10});
-  cur.on("tileerror",()=>{if(fb)return;fb=true;m.removeLayer(cur);cur=L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{attribution:"© OpenStreetMap",className:k==="dark"?"dk":"",noWrap:true}).addTo(m);cur.bringToBack()});
-  cur.addTo(m);cur.bringToBack();
-  curR=b.r?L.tileLayer(b.r,{noWrap:true,detectRetina:true,maxZoom:10,pane:"ref"}).addTo(m):null;
- };
+ const setBM=fxFondsInit(m);
+ fxZoomContinu(m,el);   /* zoom continu : pincement du pave tactile, molette */
  setBM("dark");
- el.insertAdjacentHTML("beforebegin",'<div class="fxct"><label>'+T2("Fond","Base")+' <select id="fx_bm">'+Object.keys(BM).map(k=>'<option value="'+k+'">'+BM[k].n+'</option>').join("")+'</select></label>'+
+ el.insertAdjacentHTML("beforebegin",'<div class="fxct"><label>'+T2("Fond","Base")+' <select id="fx_bm">'+fxFondsOptions("dark")+'</select></label>'+
   '<label><input type="checkbox" id="fx_co" checked> '+T2("Mes observations","My observations")+'</label>'+
+  '<label><input type="checkbox" id="fx_cp" checked> '+T2("Zone de répartition","Range")+'</label>'+
   '<label><input type="checkbox" id="fx_cd"> '+T2("Densité GBIF","GBIF density")+'</label>'+
   '<label>'+T2("Seuil","Threshold")+' <select id="fx_cs"><option value="1">≥ 1 obs.</option><option value="10">≥ 10 obs.</option><option value="100" selected>≥ 100 obs.</option><option value="1000">≥ 1000 obs.</option></select></label>'+
   '<button id="fx_w">'+T2("Monde","World")+'</button><button id="fx_a">'+T2("Recentrer sur l'aire","Zoom to range")+'</button>'+(ptsV.length?'<button id="fx_o">'+T2("Centrer sur mes obs.","Zoom to my obs.")+'</button>':'')+
@@ -913,7 +766,7 @@ function fxCarte(e,ob){
   $("#fx_cs").value=String(nq(100)>=3?100:(nq(10)>=3?10:1));
   drawP();
  };
- const fitW=()=>{m.invalidateSize();m.setView(WB.getCenter(),m.getMinZoom(),{animate:false})};
+ const fitW=()=>{m.invalidateSize();m.setView(cM(),m.getMinZoom(),{animate:false})};
  const fitA=async()=>{
   const c=e.gbif_key?await getJ("https://api.gbif.org/v2/map/occurrence/density/capabilities.json?taxonKey="+e.gbif_key):null;
   let b=null;
@@ -921,14 +774,7 @@ function fxCarte(e,ob){
   pts.forEach(o=>{if(b)b.extend([o.lat,o.lon]);else b=L.latLngBounds([[o.lat,o.lon],[o.lat,o.lon]])});
   if(b&&b.isValid())m.fitBounds(b,{padding:[30,30],maxZoom:6});
  };
- /* zoom minimum exact : le monde ENTIER est visible (jamais rogne) */
- const zMonde=()=>{
-  const so=m.options.zoomSnap;
-  m.setMinZoom(0);m.options.zoomSnap=0;
-  const z=m.getBoundsZoom(WB,false);
-  m.options.zoomSnap=so;
-  return isFinite(z)?z:m.getBoundsZoom(WB,true);
- };
+ const zMonde=()=>fxZMonde(m,WB),cM=()=>fxCentreMonde(m);   /* cadrage monde commun (voir fxZMonde) */
  const voirObs=()=>{
   m.invalidateSize();
   if(!ptsV.length)return;
@@ -938,17 +784,17 @@ function fxCarte(e,ob){
  };
  const go=()=>{
   window.FXF=null;
-  el.style.height=Math.max(300,Math.min(680,Math.round(el.offsetWidth*0.668)))+"px";
+  el.style.height=fxHautCarte(el.offsetWidth)+"px";
   m.invalidateSize();
   const z=zMonde();
   m.setMinZoom(z);m.setMaxBounds(WB);
-  m.setView(WB.getCenter(),z,{animate:false});
+  m.setView(cM(),z,{animate:false});
   if(!OUVERTURE_MONDE&&ptsV.length)voirObs();
   loadP();
  };
  if(el.offsetWidth>0)go();else window.FXF=go;   /* section repliee : go() sera appele a l'ouverture */
  /* --- Filets de securite contre le decalage des pays orange (cause exacte non confirmee) --- */
- const aPlat=()=>{try{m.setView(m.getCenter(),m.getZoom(),{animate:false,reset:true})}catch(x){console.warn("carte",x)}};
+ const aPlat=()=>{try{m.setView(m.getZoom()<=m.getMinZoom()+0.01?cM():m.getCenter(),m.getZoom(),{animate:false,reset:true})}catch(x){console.warn("carte",x)}};
  let tZ=null,tP=null,tR=null;
  m.on("zoomend",()=>{                                  /* au zoom minimum, une fois le mouvement fini */
   if(m.getZoom()>m.getMinZoom()+0.01)return;
@@ -962,14 +808,14 @@ function fxCarte(e,ob){
  if(typeof ResizeObserver!=="undefined"){              /* si le cadre change de taille apres coup (barre de defilement, texte EN plus long) */
   const verifier=()=>{
    const w=el.clientWidth;if(!w)return;
-   const h=Math.max(300,Math.min(680,Math.round(w*0.668)));
+   const h=fxHautCarte(w);
    el.style.height=h+"px";
    const s=m.getSize();
    if(s.x===w&&s.y===h)return;
    m.invalidateSize({animate:false});
    const auMonde=m.getZoom()<=m.getMinZoom()+0.01,z=zMonde();
    m.setMinZoom(z);
-   if(auMonde)m.setView(WB.getCenter(),z,{animate:false});
+   if(auMonde)m.setView(cM(),z,{animate:false});
   };
   new ResizeObserver(()=>{clearTimeout(tR);tR=setTimeout(()=>{try{verifier()}catch(x){console.warn("carte",x)}},150)}).observe(el);
  }
@@ -978,6 +824,7 @@ function fxCarte(e,ob){
  on("fx_cs",drawP);
  on("fx_bm",ev=>setBM(ev.target.value));
  on("fx_co",ev=>{ev.target.checked?og.addTo(m):m.removeLayer(og)});
+ on("fx_cp",ev=>{ev.target.checked?pays.addTo(m):m.removeLayer(pays)});   /* masque la zone orange pour mieux voir les observations */
  let gl=null,gst=0;const STY=["classic-noborder.poly","orangeHeat.point"];
  const gurl=()=>"https://api.gbif.org/v2/map/occurrence/density/{z}/{x}/{y}@1x.png?srs=EPSG%3A3857&bin=hex&hexPerTile=24&style="+STY[gst]+"&taxonKey="+e.gbif_key;
  on("fx_cd",ev=>{
@@ -992,7 +839,7 @@ function fxCarte(e,ob){
 }
 
 /* ================================================================== */
-/* 12. MODIFIER : formulaire, version anglaise, point focal, outils, enregistrement */
+/* 13. MODIFIER : formulaire, version anglaise, point focal, outils, enregistrement */
 function openEditBase(id){
  const e=ESP.find(x=>x.id===id);if(!e||!SES)return;
  const ta=c=>`<div class="lab">${c[1]}</div><textarea id="ed_${c[0]}" rows="${c[2]}">${esc(e[c[0]])}</textarea>`;
@@ -1137,7 +984,261 @@ async function saveEdit(id){
 }
 
 /* ================================================================== */
-/* 13. CONNEXION ET SUPPRESSION */
+/* 14. OBSERVATIONS : date, pays, carte du lieu, recherche de lieu, ajout / modification / suppression */
+/* ---- Dates avec precision (jour / mois / annee) ---- */
+/* Dates d'observation avec precision : jour, mois ou annee (colonne observations.date_prec). Le tri reste correct :
+   une date partielle est stockee au 1er du mois ou au 1er janvier. */
+const FX_MOIS={fr:["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"],
+ en:["January","February","March","April","May","June","July","August","September","October","November","December"]};
+function fxDateTxt(d,prec){
+ const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(String(d||""));if(!m)return "";
+ const y=m[1],mo=+m[2],jr=+m[3],M=FX_MOIS[LANG==="en"?"en":"fr"];
+ if(prec==="annee")return y;
+ if(prec==="mois")return M[mo-1]+" "+y;
+ return LANG==="en"?M[mo-1]+" "+jr+", "+y:jr+(jr===1?"er ":" ")+M[mo-1]+" "+y;
+}
+function fxDateFields(){
+ const M=FX_MOIS[LANG==="en"?"en":"fr"];
+ return '<div class="row"><input id="f_oy" type="number" min="1900" max="2100" placeholder="'+T2("Année (ex. 2019)","Year (e.g. 2019)")+'">'+
+  '<select id="f_om"><option value="">'+T2("Mois (si connu)","Month (if known)")+'</option>'+M.map((n,i)=>'<option value="'+(i+1)+'">'+n+'</option>').join("")+'</select>'+
+  '<input id="f_od" type="number" min="1" max="31" placeholder="'+T2("Jour (si connu)","Day (if known)")+'"></div>'+
+  '<div class="cr">'+T2("Laisse le mois et le jour vides si tu ne les connais pas : la date sera enregistrée comme « année » ou « mois ».","Leave month and day empty if unknown: the date is saved as “year” or “month”.")+'</div>';
+}
+function fxObsDate(){
+ const v=id=>{const e=document.getElementById(id);return e?e.value.trim():""};
+ const y=v("f_oy"),mo=v("f_om"),jr=v("f_od");
+ if(!y&&!mo&&!jr)return{date:null,prec:"jour"};
+ if(!/^\d{4}$/.test(y)||+y<1900||+y>2100)return{err:"Année invalide : 4 chiffres, entre 1900 et 2100 (ex. 2019)."};
+ if(!mo&&jr)return{err:"Un jour est saisi sans mois : choisis le mois ou efface le jour."};
+ if(!mo)return{date:y+"-01-01",prec:"annee"};
+ const mm=String(mo).padStart(2,"0");
+ if(!jr)return{date:y+"-"+mm+"-01",prec:"mois"};
+ const J=+jr,d=new Date(Date.UTC(+y,+mo-1,J));
+ if(!(J>=1)||d.getUTCMonth()!==+mo-1)return{err:"Ce jour n'existe pas pour ce mois."};
+ return{date:y+"-"+mm+"-"+String(J).padStart(2,"0"),prec:"jour"};
+}
+/* ---- Pays : liste, code, affichage ---- */
+/* Pays choisi dans une liste (codes ISO 3166-1 + Kosovo XK). Les noms viennent du navigateur (Intl.DisplayNames) :
+   ils suivent la langue de l'interface. On enregistre le code (observations.pays_code) et le nom francais (observations.pays). */
+const FX_ISO=("AD AE AF AG AI AL AM AO AQ AR AS AT AU AW AX AZ BA BB BD BE BF BG BH BI BJ BL BM BN BO BQ BR BS BT BV BW BY BZ "+
+ "CA CC CD CF CG CH CI CK CL CM CN CO CR CU CV CW CX CY CZ DE DJ DK DM DO DZ EC EE EG EH ER ES ET FI FJ FK FM FO FR "+
+ "GA GB GD GE GF GG GH GI GL GM GN GP GQ GR GS GT GU GW GY HK HM HN HR HT HU ID IE IL IM IN IO IQ IR IS IT JE JM JO JP "+
+ "KE KG KH KI KM KN KP KR KW KY KZ LA LB LC LI LK LR LS LT LU LV LY MA MC MD ME MF MG MH MK ML MM MN MO MP MQ MR MS MT MU MV MW MX MY MZ "+
+ "NA NC NE NF NG NI NL NO NP NR NU NZ OM PA PE PF PG PH PK PL PM PN PR PS PT PW PY QA RE RO RS RU RW "+
+ "SA SB SC SD SE SG SH SI SJ SK SL SM SN SO SR SS ST SV SX SY SZ TC TD TF TG TH TJ TK TL TM TN TO TR TT TV TW TZ "+
+ "UA UG UM US UY UZ VA VC VE VG VI VN VU WF WS XK YE YT ZA ZM ZW").split(" ");
+const FX_PN={};
+function fxPaysNom(c,lang){
+ lang=lang||(LANG==="en"?"en":"fr");
+ if(!(lang in FX_PN)){try{FX_PN[lang]=new Intl.DisplayNames([lang],{type:"region"})}catch(x){FX_PN[lang]=null}}
+ try{return(FX_PN[lang]&&FX_PN[lang].of(c))||c}catch(x){return c}
+}
+function fxPaysTxt(o){return o&&o.pays_code?fxPaysNom(o.pays_code):((o&&o.pays)||"")}
+function fxPaysSelect(){
+ const lg=LANG==="en"?"en":"fr";
+ const L=FX_ISO.map(c=>[c,fxPaysNom(c,lg)]).sort((a,b)=>a[1].localeCompare(b[1],lg));
+ return '<select id="f_pc" onchange="fxPaysAutre()"><option value="">'+T2("Pays…","Country…")+'</option>'+
+  L.map(x=>'<option value="'+x[0]+'">'+esc(x[1])+'</option>').join("")+
+  '<option value="__autre">'+T2("Autre (saisie libre)…","Other (free text)…")+'</option></select>'+
+  '<input id="f_pays" placeholder="'+T2("Nom du pays ou de la région","Country or region name")+'" style="display:none">';
+}
+function fxPaysAutre(){const s=document.getElementById("f_pc"),i=document.getElementById("f_pays");if(s&&i)i.style.display=s.value==="__autre"?"":"none"}
+function fxObsPays(){
+ const s=document.getElementById("f_pc"),i=document.getElementById("f_pays"),v=s?s.value:"";
+ if(v==="__autre"){const t=i&&i.value.trim();return{pays:t||null,code:null}}
+ if(v)return{pays:fxPaysNom(v,"fr"),code:v};
+ return{pays:null,code:null};
+}
+/* ---- Ajouter / modifier / supprimer une observation ---- */
+/* Observations : ajouter, modifier, supprimer depuis la fiche (connecte). Reutilise les champs date et pays (sections ci-dessus). */
+function fxObsLigne(o){
+ return "• "+esc(fxDateTxt(o.date_obs,o.date_prec)||"date ?")+" · "+esc([o.lieu,fxPaysTxt(o)].filter(Boolean).join(", "))+(o.note?" — "+esc(o.note):"");
+}
+function fxObsAdmin(ob,espId){
+ return '<div class="fxo-add"><button type="button" class="pri" onclick="openObsEdit(null,\''+espId+'\')">'+T2("+ Ajouter une observation","+ Add an observation")+'</button></div>'+
+  (ob.length?ob.map(o=>'<div class="fxo"><span>'+fxObsLigne(o)+'</span>'+
+   '<button type="button" class="fxob" onclick="openObsEdit(\''+o.id+'\',\''+espId+'\')">'+T2("Modifier","Edit")+'</button>'+
+   '<button type="button" class="fxob" style="color:#e88" onclick="delObs(\''+o.id+'\',\''+espId+'\')">'+T2("Supprimer","Delete")+'</button></div>').join(""):
+   '<div class="fxp">'+T2("Aucune","None")+'</div>');
+}
+function fxObsRemplir(o){
+ const set=(id,v)=>{const el=document.getElementById(id);if(el&&v!=null)el.value=v};
+ const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(o.date_obs||"");
+ if(m){
+  set("f_oy",m[1]);
+  if(o.date_prec!=="annee")set("f_om",String(+m[2]));
+  if(!o.date_prec||o.date_prec==="jour")set("f_od",String(+m[3]));
+ }
+ set("f_lieu",o.lieu);
+ if(o.pays_code)set("f_pc",o.pays_code);
+ else if(o.pays){set("f_pc","__autre");set("f_pays",o.pays);fxPaysAutre()}
+ set("f_lat",o.lat);set("f_lon",o.lon);set("f_note",o.note);
+}
+function openObsEdit(obsId,espId){
+ if(!SES)return;
+ const e=ESP.find(x=>x.id===espId);if(!e)return;
+ const o=obsId?(OBS[espId]||[]).find(x=>x.id===obsId):null;
+ if(obsId&&!o)return;
+ modal('<h2>'+(o?"Modifier l'observation":"Ajouter une observation")+'</h2><div class="cr">'+esc(e.nom_commun||e.nom_latin)+'</div>'+
+  '<div class="sec"><div class="lab">Date</div>'+fxDateFields()+'<div class="row"><input id="f_lieu" placeholder="Lieu">'+fxPaysSelect()+'</div>'+
+  fxPickMapHtml()+
+  '<textarea id="f_note" rows="2" placeholder="Note"></textarea></div>'+
+  '<div style="margin-top:14px;display:flex;gap:8px"><button class="pri" onclick="saveObs(\''+(obsId||"")+'\',\''+espId+'\')">Enregistrer</button><button onclick="openFiche(\''+espId+'\')">Annuler</button></div>');
+ if(o)fxObsRemplir(o);
+ fxPickMapInit();
+}
+async function saveObs(obsId,espId){
+ const od=fxObsDate();if(od.err){alert(od.err);return}
+ const op=fxObsPays();
+ const g=id=>{const e=document.getElementById(id);return e&&e.value.trim()?e.value.trim():null};
+ const nm=id=>{const v=g(id);if(v==null)return null;const n=+v.replace(",",".");return isNaN(n)?NaN:n};
+ const lat=nm("f_lat"),lon=nm("f_lon");
+ if(Number.isNaN(lat)||Number.isNaN(lon)||(lat!=null&&Math.abs(lat)>90)||(lon!=null&&Math.abs(lon)>180)){alert("Latitude (-90 à 90) ou longitude (-180 à 180) invalide.");return}
+ if((lat==null)!==(lon==null)){alert("Renseigne la latitude ET la longitude, ou aucune des deux.");return}
+ const row={date_obs:od.date,date_prec:od.prec,lieu:g("f_lieu"),pays:op.pays,pays_code:op.code,lat:lat,lon:lon,note:g("f_note")};
+ let r;
+ if(obsId)r=await SB.from("observations").update(row).eq("id",obsId).select("id");
+ else{row.espece_id=espId;r=await SB.from("observations").insert(row).select("id")}
+ if(r.error)return alert("Erreur : "+r.error.message);
+ if(!r.data||!r.data.length)return alert("Rien n'a été enregistré : droits insuffisants sur la table observations ?");
+ await load();openFiche(espId);fxGo("fx_obs");
+}
+async function delObs(obsId,espId){
+ const n=(OBS[espId]||[]).length;
+ if(!confirm(n<=1?"Supprimer cette observation ? C'est la dernière : l'espèce restera dans ta liste, sans observation.":"Supprimer cette observation ?"))return;
+ const r=await SB.from("observations").delete().eq("id",obsId).select("id");
+ if(r.error)return alert("Erreur : "+r.error.message);
+ if(!r.data||!r.data.length)return alert("Rien n'a été supprimé : droits insuffisants sur la table observations ?");
+ await load();openFiche(espId);fxGo("fx_obs");
+}
+/* ---- Carte pour poser le lieu ---- */
+/* Poser le lieu d'une observation sur une carte : clic ou glisser du repere -> remplit latitude / longitude (champs replies). */
+function fxPickMapHtml(){
+ return '<div class="lab">'+T2("Lieu sur la carte : clique pour poser le point, glisse le repère pour ajuster","Place on the map: click to drop the pin, drag it to adjust")+'</div>'+
+  '<div class="fxps"><input id="fx_ps" type="search" autocomplete="off" placeholder="'+T2("Chercher un lieu (ville, lac, parc…)","Search a place (city, lake, park…)")+'"><div id="fx_psl"></div></div><div id="fx_pm"></div>'+
+  '<div class="fxct"><label>'+T2("Fond","Base")+' <select id="fx_pmb">'+fxFondsOptions("dark")+'</select></label>'+
+  '<span class="cr" id="fx_pmc"></span><button type="button" id="fx_pme">'+T2("Effacer le point","Clear the point")+'</button></div>'+
+  '<details class="fxd" style="margin-top:6px"><summary>'+T2("Coordonnées","Coordinates")+'</summary><div class="fxb"><div class="row"><input id="f_lat" placeholder="Latitude (ex. 46.15)"><input id="f_lon" placeholder="Longitude (ex. -1.15)"></div></div></details>';
+}
+function fxPickMapInit(){
+ const el=document.getElementById("fx_pm");if(!el)return;
+ if(!window.L){el.innerHTML='<p style="padding:14px;color:#e88">'+T2("Carte indisponible (Leaflet non chargé).","Map unavailable (Leaflet not loaded).")+'</p>';return}
+ try{if(window.FXPM)window.FXPM.remove()}catch(x){}
+ /* cadrage monde commun (voir fxZMonde) : monde unique, jamais repete */
+ const WB=L.latLngBounds([[-58,-180],[84,180]]);
+ const m=L.map(el,{minZoom:0,maxZoom:15,zoomSnap:0,zoomDelta:1}).setView([20,10],1);
+ const zMonde=()=>fxZMonde(m,WB);
+ const calib=()=>{el.style.height=fxHautCarte(el.offsetWidth)+"px";m.invalidateSize();const z=zMonde();m.setMinZoom(z);m.setMaxBounds(WB);return z};
+ const vueMonde=()=>{const z=calib();m.setView(WB.getCenter(),z,{animate:false})};
+ if(el.offsetWidth>0)vueMonde();
+ window.FXPM=m;
+ let molette=false;   /* la molette fait defiler la fenetre ; elle zoome seulement apres un clic dans la carte (le pincement zoome toujours) */
+ m.scrollWheelZoom.disable();
+ m.on("focus",()=>{molette=true});m.on("blur",()=>{molette=false});
+ fxZoomContinu(m,el,()=>molette);
+ const setBM=fxFondsInit(m);
+ setBM("dark");
+ const lat=document.getElementById("f_lat"),lon=document.getElementById("f_lon"),info=document.getElementById("fx_pmc");
+ let pin=null;
+ const dire=()=>{if(info)info.textContent=(lat.value&&lon.value)?lat.value+" ; "+lon.value:T2("Aucun point posé","No point set")};
+ const poser=(ll,centrer)=>{
+  const w=ll.wrap?ll.wrap():ll,la=+(+w.lat).toFixed(5),lo=+(+w.lng).toFixed(5);
+  lat.value=la;lon.value=lo;dire();
+  if(pin)pin.setLatLng([la,lo]);
+  else{
+   pin=L.marker([la,lo],{draggable:true,icon:L.divIcon({className:"",html:'<div class="fxpin"></div>',iconSize:[14,14],iconAnchor:[7,7]})}).addTo(m);
+   pin.on("dragend",()=>poser(pin.getLatLng()));
+  }
+  if(centrer)m.setView([la,lo],Math.max(m.getZoom(),8));
+ };
+ const lire=()=>{const a=parseFloat(String(lat.value).replace(",",".")),o=parseFloat(String(lon.value).replace(",","."));return(isFinite(a)&&isFinite(o)&&Math.abs(a)<=90&&Math.abs(o)<=180)?[a,o]:null};
+ m.on("click",ev=>poser(ev.latlng,false));
+ window.FXPM_VERS=(la,lo,ext)=>{   /* appelee par la recherche de lieu */
+  poser(L.latLng(la,lo),false);
+  if(ext&&ext.length===4){try{m.fitBounds([[ext[3],ext[0]],[ext[1],ext[2]]],{maxZoom:14,padding:[20,20]});return}catch(x){}}
+  m.setView([la,lo],12);
+ };
+ const saisie=()=>{const p=lire();if(p)poser(L.latLng(p[0],p[1]),true);else if(info)info.textContent=(lat.value||lon.value)?T2("Coordonnées invalides","Invalid coordinates"):T2("Aucun point posé","No point set")};
+ lat.addEventListener("change",saisie);lon.addEventListener("change",saisie);
+ document.getElementById("fx_pmb").addEventListener("change",ev=>setBM(ev.target.value));
+ document.getElementById("fx_pme").addEventListener("click",()=>{lat.value="";lon.value="";if(pin){m.removeLayer(pin);pin=null}dire()});
+ const p0=lire();
+ if(p0)poser(L.latLng(p0[0],p0[1]),true);else dire();   /* observation existante : on part de son point */
+ setTimeout(()=>{try{if(pin)calib();else vueMonde()}catch(x){}},120);   /* recadrage une fois la fenetre affichee */
+ fxLieuInit();
+}
+/* ---- Recherche de lieu avec suggestions ---- */
+/* Recherche de lieu avec suggestions (Photon, fait pour la frappe) ; repli sur le service OpenStreetMap (Nominatim) UNIQUEMENT sur clic :
+   sa politique interdit l'autocompletion. Un lieu choisi pose le point sur la carte, remplit « Lieu » et selectionne le pays. */
+const FX_LS={cache:{}};
+function fxLieuLabel(nom,ville,region){return[nom,ville,region].filter((x,i,t)=>x&&t.indexOf(x)===i).join(", ")}
+async function fxLieuPhoton(q){
+ const lg=LANG==="en"?"en":"fr";
+ const r=await fetch("https://photon.komoot.io/api/?q="+encodeURIComponent(q)+"&limit=6&lang="+lg);
+ if(!r.ok)throw new Error("photon "+r.status);
+ const d=await r.json();
+ return(d.features||[]).filter(f=>f.geometry&&f.geometry.coordinates).map(f=>{
+  const p=f.properties||{},c=f.geometry.coordinates,label=fxLieuLabel(p.name||p.street||"",p.city||p.county||p.district||"",p.state||"");
+  return{lat:+c[1],lon:+c[0],nom:p.name||p.street||label,label:label,cc:String(p.countrycode||"").toUpperCase(),pays:p.country||"",ext:(p.extent&&p.extent.length===4)?p.extent:null};
+ });
+}
+async function fxLieuNomi(q){
+ const lg=LANG==="en"?"en":"fr";
+ const r=await fetch("https://nominatim.openstreetmap.org/search?q="+encodeURIComponent(q)+"&format=jsonv2&limit=6&addressdetails=1&accept-language="+lg);
+ if(!r.ok)throw new Error("nominatim "+r.status);
+ const d=await r.json();
+ return(d||[]).map(x=>{
+  const a=x.address||{},nom=x.name||String(x.display_name||"").split(",")[0],label=fxLieuLabel(nom,a.city||a.town||a.village||a.municipality||a.county||"",a.state||""),b=x.boundingbox;
+  return{lat:+x.lat,lon:+x.lon,nom:nom,label:label,cc:String(a.country_code||"").toUpperCase(),pays:a.country||"",ext:(b&&b.length===4)?[+b[2],+b[1],+b[3],+b[0]]:null};
+ });
+}
+function fxLieuChoisir(r){
+ if(!r)return;
+ const lieu=document.getElementById("f_lieu");if(lieu)lieu.value=r.label||r.nom;
+ const sel=document.getElementById("f_pc");
+ if(sel){
+  if(r.cc&&FX_ISO.indexOf(r.cc)>=0){sel.value=r.cc;fxPaysAutre()}
+  else if(r.pays){sel.value="__autre";fxPaysAutre();const t=document.getElementById("f_pays");if(t)t.value=r.pays}
+ }
+ if(window.FXPM_VERS)window.FXPM_VERS(r.lat,r.lon,r.ext);
+}
+function fxLieuInit(){
+ const inp=document.getElementById("fx_ps"),box=document.getElementById("fx_psl");if(!inp||!box)return;
+ let tmr=null,seq=0,items=[];
+ const montrer=h=>{box.innerHTML=h;box.style.display=h?"block":"none"};
+ const osm='<div data-nomi="1"><b>'+T2("Chercher avec OpenStreetMap","Search with OpenStreetMap")+'</b><small>'+T2("autre service, sur clic seulement","other service, on click only")+'</small></div>';
+ const lancer=async(q,nomi)=>{
+  const n=++seq,cle=(nomi?"n:":"p:")+q;
+  montrer('<div class="cr" style="padding:7px 10px">'+T2("Recherche…","Searching…")+'</div>');
+  let res=FX_LS.cache[cle],err=null;
+  if(!res){try{res=await(nomi?fxLieuNomi(q):fxLieuPhoton(q));FX_LS.cache[cle]=res}catch(x){err=x}}
+  if(n!==seq)return;                                  /* reponse perimee : une recherche plus recente est partie */
+  if(err){montrer('<div class="cr" style="padding:7px 10px">'+T2("Service de recherche indisponible. Pose le point sur la carte.","Search service unavailable. Drop the pin on the map.")+'</div>'+(nomi?"":osm));return}
+  items=res;
+  if(!res.length){montrer('<div class="cr" style="padding:7px 10px">'+T2("Aucun lieu trouvé. Pose le point sur la carte.","No place found. Drop the pin on the map.")+'</div>'+(nomi?"":osm));return}
+  montrer(res.map((r,i)=>'<div data-i="'+i+'">'+esc(r.nom)+'<small>'+esc([r.label,r.pays].filter(Boolean).join(" · "))+'</small></div>').join("")+(nomi?"":osm));
+ };
+ inp.addEventListener("input",()=>{
+  clearTimeout(tmr);const q=inp.value.trim();
+  if(q.length<3){seq++;montrer("");return}
+  tmr=setTimeout(()=>lancer(q,false),400);            /* attend la fin de la frappe */
+ });
+ inp.addEventListener("keydown",ev=>{
+  if(ev.key!=="Enter")return;
+  ev.preventDefault();clearTimeout(tmr);
+  const q=inp.value.trim();if(q.length>=2)lancer(q,false);
+ });
+ box.addEventListener("mousedown",ev=>ev.preventDefault());   /* garde le focus : le clic n'est pas avale par le blur */
+ box.addEventListener("click",ev=>{
+  const d=ev.target.closest("[data-i],[data-nomi]");if(!d)return;
+  if(d.dataset.nomi){const q=inp.value.trim();if(q.length>=2)lancer(q,true);return}
+  const r=items[+d.dataset.i];fxLieuChoisir(r);inp.value=r?r.nom:inp.value;montrer("");
+ });
+ inp.addEventListener("blur",()=>setTimeout(()=>montrer(""),150));
+}
+
+/* ================================================================== */
+/* 15. CONNEXION ET SUPPRESSION */
 async function delEsp(id){
  if(!confirm("Supprimer cette espèce et ses observations ?"))return;
  const r=await SB.from("especes").delete().eq("id",id);
@@ -1155,7 +1256,7 @@ async function doLogin(){
 function ui(){$("#add").style.display=SES?"":"none";$("#log").textContent=SES?"Déconnexion":"Connexion"}
 
 /* ================================================================== */
-/* 14. AJOUT D'UNE ESPECE : recherche, import multi-sources, enregistrement */
+/* 16. AJOUT D'UNE ESPECE : recherche, import multi-sources, enregistrement */
 function openAdd(){
  modal(`<h2>Ajouter une espèce</h2><div class="row"><input id="sq" placeholder="Nom commun ou latin" onkeydown="if(event.key==='Enter')doSearch()"><button class="pri" style="flex:0" onclick="doSearch()">Chercher</button></div><div id="sr"></div>`);
  $("#sq").focus();
@@ -1164,7 +1265,7 @@ async function fxSearchGbif(){
  const q=$("#sq").value.trim();if(!q)return;
  $("#sr").innerHTML='<p class="cr">Recherche…</p>';
  try{
-  const u=`https://api.gbif.org/v1/species/search?q=${encodeURIComponent(q)}&rank=SPECIES&status=ACCEPTED&highertaxonKey=1&datasetKey=d7dddbf4-2cf0-4f39-9b2a-bb099caae36c&limit=10`;
+  const u=`https://api.gbif.org/v1/species/search?q=${encodeURIComponent(q)}&rank=SPECIES&rank=SUBSPECIES&status=ACCEPTED&highertaxonKey=1&datasetKey=d7dddbf4-2cf0-4f39-9b2a-bb099caae36c&limit=10`;
   RES=(await (await fetch(u)).json()).results||[];
  }catch(x){$("#sr").innerHTML='<p style="color:#e88">Recherche impossible (connexion ?).</p>';return}
  $("#sr").innerHTML=RES.length?RES.map((s,i)=>{
@@ -1175,27 +1276,28 @@ async function getJ(u){try{const r=await fetch(u);return r.ok?await r.json():nul
 async function doSearch(){
  const q=$("#sq").value.trim();if(!q)return;
  $("#sr").innerHTML='<p class="cr">Recherche…</p>';
- const d=await getJ("https://api.inaturalist.org/v1/taxa/autocomplete?q="+encodeURIComponent(q)+"&rank=species&taxon_id=1&locale=fr&per_page=15");
- const L2=d&&(d.results||[]).filter(r=>r.name&&FX_NOTANIM.indexOf(r.iconic_taxon_name)<0&&r.is_active!==false);
+ const d=await getJ("https://api.inaturalist.org/v1/taxa/autocomplete?q="+encodeURIComponent(q)+"&taxon_id=1&locale=fr&per_page=30");   /* espece + sous-espece (filtre ci-dessous) */
+ const L2=d&&(d.results||[]).filter(r=>r.name&&FX_NOTANIM.indexOf(r.iconic_taxon_name)<0&&r.is_active!==false&&(!r.rank||r.rank==="species"||r.rank==="subspecies"));
  if(!L2||!L2.length)return fxSearchGbif();
  const cap=t=>t?t.charAt(0).toUpperCase()+t.slice(1):"";
- RES=L2.map(r=>({_inat:true,name:r.name,vn:r.preferred_common_name||"",ic:r.iconic_taxon_name||"",im:r.default_photo?(r.default_photo.square_url||r.default_photo.medium_url||""):""}));
- $("#sr").innerHTML=RES.map((s,i)=>'<div class="res" onclick="pick('+i+')">'+(s.im?'<img loading="lazy" alt="" src="'+esc(s.im)+'">':'<div class="rph"></div>')+'<div><i style="color:var(--acc)">'+esc(s.name)+'</i>'+(s.vn?" · "+esc(cap(s.vn)):"")+'<div class="cr">'+esc(FX_IC[s.ic]||s.ic||"")+'</div></div></div>').join("");
+ RES=L2.map(r=>({_inat:true,rk:r.rank||"",name:r.name,vn:r.preferred_common_name||"",ic:r.iconic_taxon_name||"",im:r.default_photo?(r.default_photo.square_url||r.default_photo.medium_url||""):""}));
+ $("#sr").innerHTML=RES.map((s,i)=>'<div class="res" onclick="pick('+i+')">'+(s.im?'<img loading="lazy" alt="" src="'+esc(s.im)+'">':'<div class="rph"></div>')+'<div><i style="color:var(--acc)">'+esc(s.name)+'</i>'+(s.rk==="subspecies"?' <span class="cr">· sous-espèce</span>':'')+(s.vn?" · "+esc(cap(s.vn)):"")+'<div class="cr">'+esc(FX_IC[s.ic]||s.ic||"")+'</div></div></div>').join("");
 }
 async function fxResolve(name){
  const m=await getJ("https://api.gbif.org/v1/species/match?name="+encodeURIComponent(name)+"&kingdom=Animalia");
  const key=m&&(m.acceptedUsageKey||m.usageKey);
  if(!key||m.matchType==="NONE")return null;
  const d=await getJ("https://api.gbif.org/v1/species/"+key);
- return d&&d.key&&d.rank==="SPECIES"?d:null;
+ return d&&d.key&&(d.rank==="SPECIES"||d.rank==="SUBSPECIES")?d:null;
 }
 async function pickImport(i){
  const sp=RES[i],name=sp.canonicalName,cap=t=>t?t.charAt(0).toUpperCase()+t.slice(1):"";
  modal('<p class="cr">Interrogation de Wikipédia (fr, en), GBIF, iNaturalist, Wikidata…</p>');
+ if(!sp.class){try{sp.class=await fxClasseInat(sp.canonicalName||sp.scientificName)||sp.class}catch(x){}}
  const fish=FX2_FISH.includes(sp.class);
  const [v,st,wf,we,gd,wd,fb,ex]=await Promise.all([
   getJ("https://api.gbif.org/v1/species/"+sp.key+"/vernacularNames?limit=200"),
-  getJ("https://api.inaturalist.org/v1/taxa?q="+encodeURIComponent(name)+"&rank=species&per_page=5"),
+  getJ("https://api.inaturalist.org/v1/taxa?q="+encodeURIComponent(name)+"&per_page=5"),
   fxWiki("fr",name),fxWiki("en",name),
   getJ("https://api.gbif.org/v1/species/"+sp.key+"/descriptions?limit=100"),
   getJ("https://www.wikidata.org/w/api.php?action=wbgetentities&sites=enwiki&props=claims&format=json&origin=*&titles="+encodeURIComponent(name)),
@@ -1313,7 +1415,98 @@ async function save(){
 }
 
 /* ================================================================== */
-/* 15. DEMARRAGE */
+/* 17. CARTE GLOBALE : toutes les observations, couleurs par grand groupe, filtres */
+/* Carte de TOUTES les observations : un point par observation avec coordonnees, couleur par grand groupe (8 couleurs), filtres, satellite par defaut. */
+const FXG_GR=[
+ ["mam","Mammifères","Mammals","#E69F00"],
+ ["ois","Oiseaux","Birds","#F0E442"],
+ ["rep","Reptiles","Reptiles","#2ECC9A"],
+ ["amp","Amphibiens","Amphibians","#FF6B6B"],
+ ["poi","Poissons","Fish","#56B4E9"],
+ ["art","Arthropodes (insectes, arachnides, crustacés)","Arthropods (insects, arachnids, crustaceans)","#CC79A7"],
+ ["mol","Mollusques","Molluscs","#8E9BFF"],
+ ["aut","Autres invertébrés et divers","Other invertebrates and misc.","#B0B0B0"]
+];
+const FXG_MAP={poissons:"poi",oiseaux:"ois",mammiferes:"mam",reptiles:"rep",amphibiens:"amp",insectes:"art",arachnides:"art",crustaces:"art",mollusques:"mol"};
+function fxGroupeCarte(e){return FXG_MAP[fxGroupe(e)]||"aut"}
+function fxGlobeClose(){
+ const ov=document.getElementById("fx_gm");
+ try{if(window.FXGM)window.FXGM.remove()}catch(x){}
+ window.FXGM=null;
+ if(window.FXGR){window.removeEventListener("resize",window.FXGR);window.FXGR=null}
+ if(ov){ov.classList.remove("on");ov.innerHTML=""}
+}
+function fxGlobeFiche(id){fxGlobeClose();openFiche(id)}
+document.addEventListener("keydown",ev=>{if(ev.key==="Escape"&&document.querySelector("#fx_gm.on"))fxGlobeClose()});
+function fxGlobe(){
+ if(!window.L){alert(T2("Carte indisponible (Leaflet non chargé).","Map unavailable (Leaflet not loaded)."));return}
+ fxGlobeClose();
+ let ov=document.getElementById("fx_gm");
+ if(!ov){ov=document.createElement("div");ov.id="fx_gm";document.body.appendChild(ov)}
+ const GN=g=>T2(g[1],g[2]);
+ ov.innerHTML=`<div id="fx_gmap"></div>
+ <button id="fx_gx" title="Échap">✕</button>
+ <div id="fx_gpan"><details id="fx_gd" ${window.innerWidth>700?"open":""}><summary>${T2("Carte de mes observations","Map of my observations")}</summary>
+ <input id="fx_gq" placeholder="${T2("Filtrer : nom, famille, ordre…","Filter: name, family, order…")}">
+ <label class="fxg-f">${T2("Fond","Base")} <select id="fx_gbm">${fxFondsOptions("sat")}</select></label>
+ <div id="fx_gl">${FXG_GR.map(g=>`<label class="fxg-r"><input type="checkbox" checked data-k="${g[0]}"><span class="fxg-d" style="background:${g[3]}"></span><span>${esc(GN(g))}</span><b id="fx_gc_${g[0]}">0</b></label>`).join("")}</div>
+ <div class="fxg-b"><button id="fx_gt">${T2("Tout","All")}</button><button id="fx_gn">${T2("Aucun","None")}</button><button id="fx_gw">${T2("Monde","World")}</button><button id="fx_gp">${T2("Centrer sur les points","Zoom to points")}</button></div>
+ <div id="fx_gs" class="fxg-s"></div></details></div>`;
+ ov.classList.add("on");
+ const WB=L.latLngBounds([[-58,-180],[84,180]]);
+ const m=L.map("fx_gmap",{minZoom:0,maxZoom:14,zoomSnap:0,zoomDelta:1,zoomControl:false,keyboard:false}).setView([20,10],1);
+ window.FXGM=m;
+ L.control.zoom({position:"bottomright"}).addTo(m);
+ m.createPane("obs").style.zIndex=430;   /* le volet "ref" (noms) est cree par fxFondsInit */
+ const setBM=fxFondsInit(m);
+ fxZoomContinu(m,document.getElementById("fx_gmap"));   /* le panneau de gauche garde son defilement normal */
+ setBM("sat");   /* satellite par defaut */
+ const zMonde=()=>fxZMonde(m,WB),cM=()=>fxCentreMonde(m);   /* cadrage monde commun aux trois cartes */
+ const vueMonde=()=>{m.invalidateSize();const z=zMonde();m.setMinZoom(z);m.setMaxBounds(WB);m.setView(cM(),z,{animate:false})};
+ vueMonde();
+ const on={},GRP={},layers={};
+ FXG_GR.forEach(g=>{on[g[0]]=true;GRP[g[0]]=g;layers[g[0]]=L.layerGroup().addTo(m)});
+ let q="",pts=[];
+ const flat=s=>String(s||"").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+ const draw=()=>{
+  FXG_GR.forEach(g=>layers[g[0]].clearLayers());
+  const cnt={};let tot=0,vis=0;pts=[];
+  ESP.forEach(e=>{
+   const k=fxGroupeCarte(e);
+   if(q&&flat([e.nom_commun,e.nom_latin,e.genre,e.famille,e.ordre,e.classe].join(" ")).indexOf(q)<0)return;
+   (OBS[e.id]||[]).forEach(o=>{
+    const la=+o.lat,lo=+o.lon;
+    if(o.lat==null||o.lon==null||!isFinite(la)||!isFinite(lo))return;
+    cnt[k]=(cnt[k]||0)+1;tot++;
+    if(!on[k])return;
+    vis++;pts.push([la,lo]);
+    const nm=e.nom_commun||e.nom_latin,dt=fxDateTxt(o.date_obs,o.date_prec),pl=[o.lieu,fxPaysLib(o)].filter(Boolean).join(", ");
+    L.circleMarker([la,lo],{pane:"obs",radius:5,color:"#0b0a08",weight:1.5,fillColor:GRP[k][3],fillOpacity:.95}).addTo(layers[k])
+     .on("mouseover",function(){this.setRadius(8)}).on("mouseout",function(){this.setRadius(5)})
+     .bindTooltip(esc(nm),{sticky:true})
+     .bindPopup("<b>"+esc(nm)+"</b><br><i>"+esc(e.nom_latin)+"</i>"+((dt||pl)?"<br>"+esc([dt,pl].filter(Boolean).join(" · ")):"")+"<br><a href=\"#\" onclick=\"fxGlobeFiche('"+e.id+"');return false\">"+T2("Voir la fiche","Open the page")+"</a>");
+   });
+  });
+  FXG_GR.forEach(g=>{const c=document.getElementById("fx_gc_"+g[0]);if(c){c.textContent=cnt[g[0]]||0;c.parentNode.style.opacity=cnt[g[0]]?1:.45}});
+  const s=document.getElementById("fx_gs");
+  if(s)s.textContent=tot?vis+" / "+tot+T2(" observations affichées"," observations shown"):T2("Aucune observation avec coordonnées pour l'instant.","No observation with coordinates yet.");
+ };
+ draw();
+ document.getElementById("fx_gx").onclick=fxGlobeClose;
+ document.getElementById("fx_gq").addEventListener("input",ev=>{q=flat(ev.target.value.trim());draw()});
+ document.getElementById("fx_gbm").addEventListener("change",ev=>setBM(ev.target.value));
+ document.querySelectorAll("#fx_gl input").forEach(c=>c.addEventListener("change",()=>{on[c.dataset.k]=c.checked;draw()}));
+ const tous=v=>{FXG_GR.forEach(g=>{on[g[0]]=v});document.querySelectorAll("#fx_gl input").forEach(c=>{c.checked=v});draw()};
+ document.getElementById("fx_gt").onclick=()=>tous(true);
+ document.getElementById("fx_gn").onclick=()=>tous(false);
+ document.getElementById("fx_gw").onclick=vueMonde;
+ document.getElementById("fx_gp").onclick=()=>{if(!pts.length)return;if(pts.length===1)m.setView(pts[0],8,{animate:false});else m.fitBounds(L.latLngBounds(pts),{padding:[70,70],maxZoom:8,animate:false})};
+ window.FXGR=()=>{try{const au=m.getZoom()<=m.getMinZoom()+0.01;m.invalidateSize();const z=zMonde();m.setMinZoom(z);if(au)m.setView(cM(),z,{animate:false})}catch(x){}};
+ window.addEventListener("resize",window.FXGR);
+}
+
+/* ================================================================== */
+/* 18. DEMARRAGE */
 fxApplyLang();
 (async function(){
  if(!window.supabase){$("#grid").innerHTML='<p style="padding:22px;color:#e88">Impossible de charger Supabase (connexion internet ?).</p>';return}
