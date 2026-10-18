@@ -1,0 +1,1248 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pokedex des espèces</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+:root{--bg:#14130f;--card:rgba(255,255,255,.05);--line:rgba(255,255,255,.12);--txt:#ece8df;--mut:#a39d90;--acc:#d97757;--serif:Georgia,"Times New Roman",serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--txt);font:15px/1.5 -apple-system,system-ui,sans-serif}
+header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;padding:18px 22px;border-bottom:1px solid var(--line)}
+h1{font:400 26px var(--serif);margin:0}
+.stats{display:flex;gap:18px;color:var(--mut);font-size:12px}
+.stats b{display:block;color:var(--txt);font:400 20px var(--serif)}
+button,select,input,textarea{font:inherit;color:var(--txt);background:rgba(255,255,255,.07);border:1px solid var(--line);border-radius:8px;padding:8px 12px}
+textarea{width:100%;resize:vertical}
+option{background:#1d1b16}
+button{cursor:pointer}button:hover{filter:brightness(1.2)}
+button.pri{background:var(--acc);border-color:var(--acc);color:#2b1208;font-weight:500}
+.bar{display:flex;flex-wrap:wrap;gap:10px;padding:14px 22px}.bar input{flex:1;min-width:160px}
+#grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:16px;padding:6px 22px 40px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden;cursor:pointer;backdrop-filter:blur(8px)}
+.card:hover{border-color:var(--acc)}
+.ph{height:150px;background:#26241e center/cover;display:flex;align-items:center;justify-content:center;color:var(--mut);font-size:13px}
+.cb{padding:10px 12px}.no{font-size:11px;color:var(--mut);letter-spacing:.08em;text-transform:uppercase}
+.nm{font:400 17px var(--serif)}.la{font-style:italic;color:var(--acc);font-size:13px}
+.pill{display:inline-block;padding:1px 9px;border-radius:99px;font-size:11px;font-weight:500}
+#ov{position:fixed;inset:0;background:rgba(0,0,0,.72);display:none;justify-content:center;align-items:flex-start;overflow:auto;padding:28px 12px;z-index:9}
+#ov.on{display:flex}
+#md{background:#1d1b16;border:1px solid var(--line);border-radius:14px;max-width:760px;width:100%;padding:20px}
+#md h2{font:400 24px var(--serif);margin:0}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin:8px 0}.row>*{flex:1;min-width:140px}
+.lab{font-size:12px;color:var(--mut);margin-top:10px}
+.sec{border-top:1px solid var(--line);margin-top:14px;padding-top:10px;white-space:pre-line}
+.res{padding:10px;border:1px solid var(--line);border-radius:8px;margin:6px 0;cursor:pointer}.res:hover{border-color:var(--acc)}
+.ths{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}
+.th{height:80px;background:#26241e center/cover;border-radius:8px;border:2px solid transparent;cursor:pointer}.th.on{border-color:var(--acc)}
+.big{height:280px;background:#26241e center/cover;border-radius:10px}
+.cr{font-size:11px;color:var(--mut)}
+#md{max-width:860px}
+.fxs h3{font:400 20px var(--serif);border-bottom:1px solid var(--line);padding-bottom:4px;margin:24px 0 8px}
+.fxp{white-space:pre-line;margin:2px 0 10px}
+.fxtx{border-collapse:collapse;width:100%}
+.fxtx td{padding:4px 8px;border-bottom:1px solid var(--line)}
+.fxtx td:first-child{color:var(--mut);width:150px}
+.fxn{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.fxn button{padding:3px 12px;border-radius:99px;font-size:13px}
+.dk{filter:invert(1) hue-rotate(180deg) brightness(.8) contrast(.9)}
+#fx_map{height:340px;border-radius:10px;overflow:hidden;background:#0f0e0b}
+.fxid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden;margin:14px 0}
+.fxid div{background:#1d1b16;padding:8px 12px}
+.fxid small{display:block;color:var(--mut);font-size:11px;text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px}
+.fxn button.all{border-color:var(--acc);color:var(--acc)}
+.fxd{border-bottom:1px solid var(--line)}
+.fxd summary{cursor:pointer;list-style:none;font:400 19px var(--serif);padding:12px 2px;display:flex;justify-content:space-between;align-items:center}
+.fxd summary::-webkit-details-marker{display:none}
+.fxd summary::after{content:"+";color:var(--acc);font:400 22px var(--serif)}
+.fxd[open] summary::after{content:"–"}
+.fxb{padding:0 2px 14px}
+#fx_map{height:460px}
+.fxid:empty{display:none}
+.fxfil{font-size:13px;color:var(--mut);margin:8px 0 0}
+.fxct{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;font-size:13px;color:var(--mut);margin:8px 0}
+.fxct label{display:flex;gap:6px;align-items:center;cursor:pointer}
+.fxct input{padding:0;background:none;border:0;accent-color:var(--acc)}
+.fxct select{padding:3px 8px;font-size:12px}
+.leaflet-tooltip{background:#1d1b16;color:#ece8df;border:1px solid #45413b}
+.fx2h{font-size:12px;color:var(--mut);margin:2px 0 6px}
+#md .lab select{max-width:100%;margin-left:6px;padding:2px 6px;font-size:12px}
+.sw{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-1px}
+.fxct button{padding:3px 10px;font-size:12px}
+.leaflet-container .leaflet-interactive:focus,.leaflet-container path:focus,.leaflet-container svg:focus{outline:none}
+.leaflet-container{background:#14130f}
+.lg{opacity:.45}.lg.on{opacity:1;color:var(--acc)}
+#lang{padding:6px 10px}
+.res{display:flex;gap:12px;align-items:center}
+.res img,.res .rph{width:72px;height:72px;border-radius:8px;object-fit:cover;background:#26241e;flex:none}
+.fxlg{display:inline-flex;align-items:center;gap:6px;font-size:12px}
+.fxlg i{display:inline-block;width:90px;height:10px;border-radius:5px;background:linear-gradient(90deg,rgba(217,119,87,.2),rgba(217,119,87,.85))}
+.fxhero{position:relative;margin:-20px -20px 8px;border-radius:14px 14px 0 0;overflow:hidden;background:#14130f;display:flex;justify-content:center;align-items:center;padding:22px 0;min-height:220px}
+.fxbg{position:absolute;inset:-40px;background-size:cover;background-position:center;filter:blur(30px) brightness(.5) saturate(1.3)}
+.fxph{position:relative;display:block;max-width:calc(100% - 44px);max-height:460px;width:auto;height:auto;border-radius:10px;box-shadow:0 14px 44px rgba(0,0,0,.55)}
+#grid .ph{height:180px;background-position:50% 35%}
+.fbrow{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;margin:6px 0}
+.fbf{position:relative;display:inline-block;max-width:100%;cursor:crosshair;border-radius:8px;overflow:hidden;line-height:0}
+.fbf img{max-width:100%;max-height:300px;display:block}
+.fbf i{position:absolute;width:22px;height:22px;margin:-11px 0 0 -11px;border:3px solid #fff;border-radius:50%;box-shadow:0 0 0 2px #d97757;pointer-events:none}
+.fbpv{width:210px;height:180px;border-radius:12px;background-size:cover;border:1px solid var(--line)}
+.fxfr{color:var(--mut);font-style:italic}
+.fxfrb{display:inline-block;font-style:normal;font-size:10px;letter-spacing:.06em;padding:0 6px;border-radius:99px;border:1px solid var(--line);color:var(--mut);vertical-align:1px}
+/* contour des pays plus net : les petits pays et les iles restent visibles de loin */
+.leaflet-pays-pane path{stroke:#fff;stroke-opacity:.7;stroke-width:1.6px;vector-effect:non-scaling-stroke}
+/* ===== PATCH OBSERVATIONS (style) ===== */
+.fxo{display:flex;gap:8px;align-items:baseline;padding:6px 0;border-bottom:1px solid var(--line)}
+.fxo span{flex:1;white-space:pre-line}
+.fxob{padding:2px 10px;font-size:12px}
+.fxo-add{margin:2px 0 8px}
+/* ===== FIN PATCH OBSERVATIONS (style) ===== */
+/* ===== PATCH CARTE-POINT (style) ===== */
+#fx_pm{height:260px;border-radius:10px;overflow:hidden;background:#0f0e0b;margin:4px 0}
+.fxpin{width:14px;height:14px;border-radius:50%;background:#22d3ee;border:2px solid #0b0a08;box-shadow:0 0 0 1px rgba(255,255,255,.8)}
+/* ===== FIN PATCH CARTE-POINT (style) ===== */
+/* ===== PATCH LIEU-RECHERCHE (style) ===== */
+.fxps{position:relative;margin:4px 0}
+.fxps input{width:100%}
+#fx_psl{position:absolute;left:0;right:0;top:100%;z-index:1100;background:#1d1b16;border:1px solid var(--line);border-radius:8px;max-height:250px;overflow:auto;display:none;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+#fx_psl>div{padding:7px 10px;cursor:pointer;border-bottom:1px solid var(--line)}
+#fx_psl>div:hover{background:rgba(255,255,255,.08)}
+#fx_psl small{display:block;color:var(--mut);font-size:11px}
+/* ===== FIN PATCH LIEU-RECHERCHE (style) ===== */
+</style></head><body>
+<header>
+ <h1>Pokedex des espèces</h1>
+ <div class="stats" id="st"></div>
+ <div><button id="add" class="pri" style="display:none" onclick="openAdd()">+ Ajouter</button> <button id="log" onclick="openLogin()">Connexion</button> <button id="lang" onclick="toggleLang()"><span class="lg on">FR</span> | <span class="lg">EN</span></button></div>
+</header>
+<div class="bar"><input id="q" placeholder="Filtrer : nom, famille, ordre…" oninput="render()"><select id="cl" onchange="render()"><option value="">Tous les groupes</option></select><select id="pf" onchange="render()"></select><select id="af" onchange="render()"></select><select id="so" onchange="fxSortSet(this.value);render()"></select></div>
+<div id="grid"></div>
+<div id="ov" onclick="if(event.target===this)closeAll()"><div id="md"></div></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+/* ================================================================== */
+/* 1. BASE : constantes, etat, utilitaires */
+const URL_SB="https://buirnfstagzltzronlmu.supabase.co";
+const KEY_SB="sb_publishable_4BocyaiyWs-4Qwa3rKX8Hg_xb_QiIgC";
+const $=s=>document.querySelector(s);
+const esc=t=>String(t==null?"":t).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const UC={LC:"#60c659",NT:"#cce226",VU:"#f9e814",EN:"#fc7f3f",CR:"#d81e05",EW:"#542344",EX:"#000",DD:"#d1d1c6",NE:"#fff"};
+const UF={LC:"Préoccupation mineure",NT:"Quasi menacée",VU:"Vulnérable",EN:"En danger",CR:"En danger critique",EW:"Éteinte à l'état sauvage",EX:"Éteinte",DD:"Données insuffisantes",NE:"Non évaluée"};
+let SB=null,ESP=[],OBS={},SES=null,RES=[],CAND=null;
+const pill=u=>u?`<span class="pill" title="${esc(UF[u])}" style="background:${UC[u]};color:${u==="EW"||u==="EX"?"#fff":"#111"}">${u}</span>`:"";
+const modal=h=>{$("#md").innerHTML=h;$("#ov").classList.add("on")};
+function closeAll(){$("#ov").classList.remove("on")}
+document.addEventListener("keydown",e=>{if(e.key==="Escape")closeAll()});
+
+/* ================================================================== */
+/* 2. LANGUE COURANTE */
+var LANG=(function(){try{return localStorage.getItem("pk_lang")==="en"?"en":"fr"}catch(x){return"fr"}})();
+function T2(a,b){return LANG==="en"?b:a}
+
+/* ================================================================== */
+/* 3. CHAMPS DES FICHES */
+const FX_CH=[["biologie","Description",5],["morphologie","Morphologie",4],["comportement","Comportement",3],["alimentation","Alimentation",3],["reproduction","Reproduction",3],["habitat","Habitat",3],["repartition","Répartition",3],["migration","Migration",3],["ecologie","Rôle écologique",2]];
+const FX_TXR=[["Règne","regne"],["Embranchement","phylum"],["Classe","classe"],["Ordre","ordre"],["Famille","famille"],["Genre","genre"]];
+const FX_ID=[["taille","Taille"],["poids","Poids"],["longevite","Longévité"],["ponte","Ponte / portée"],["regime","Régime"]];
+const C5MK="\u2063FR\u2063";
+const C5N="(\\d{1,3}(?:[\\s\\u00a0\\u202f.,]\\d{3})+|\\d+(?:[.,]\\d+)?)";
+
+/* ================================================================== */
+/* 4. IMPORT : constantes (sections reconnues, UICN, poissons) */
+const FX2_MIN=120;
+const FX2_FISH=["Actinopterygii","Elasmobranchii","Chondrichthyes","Holocephali","Petromyzonti","Myxini","Cephalaspidomorphi","Sarcopterygii"];
+const FX2_CAT={
+ morphologie:/(morpholog|description|appearance|anatomy|anatomie|physical|caract[eé]ristiques)/i,
+ comportement:/(comportement|[eé]thologie|m[oœ]eurs|behaviou?r|vie sociale|social)/i,
+ alimentation:/(alimentation|r[eé]gime|nourriture|diet|feeding|food)/i,
+ reproduction:/(reproduction|breeding|spawning|life[ -]?cycle|life history|nidification|cycle de vie|frai|ponte)/i,
+ habitat:/(habitat|milieu|biotope)/i,
+ repartition:/(r[eé]partition|distribution|geographic range|native range|introduced range)/i,
+ migration:/(migrat|d[eé]placement|movement)/i,
+ ecologie:/([eé]cologi|ecological)/i
+};
+const FX2G=[[/habitat/i,"habitat"],[/distribut|range/i,"repartition"],[/diet|feeding|food/i,"alimentation"],[/reproduc|breeding|life ?cycle/i,"reproduction"],[/migrat/i,"migration"],[/behaviou?r|biolog/i,"comportement"],[/morpholog|diagnos|appearance/i,"morphologie"],[/general|descript/i,"biologie"]];
+const FX2_WDU={Q211005:"LC",Q719675:"NT",Q278113:"VU",Q11394:"EN",Q219127:"CR",Q239509:"EW",Q237350:"EX",Q3245245:"DD",Q3350324:"NE"};
+let FX2C={},FX2I={};
+
+/* ================================================================== */
+/* 5. RECHERCHE : constantes */
+const FX_IC={Aves:"Oiseau",Mammalia:"Mammifère",Reptilia:"Reptile",Amphibia:"Amphibien",Actinopterygii:"Poisson",Mollusca:"Mollusque",Arachnida:"Arachnide",Insecta:"Insecte",Animalia:"Animal"};
+const FX_NOTANIM=["Plantae","Fungi","Protozoa","Chromista","Bacteria","Archaea"];
+var FXWT={};
+
+/* ================================================================== */
+/* 6. SOURCES DE TEXTE : Wikipedia, GBIF, FishBase, Wikidata, extraction, langue */
+async function fxWiki(lang,name){
+ const d=await getJ("https://"+lang+".wikipedia.org/w/api.php?action=query&prop=extracts&explaintext=1&exsectionformat=wiki&redirects=1&format=json&origin=*&titles="+encodeURIComponent(name));
+ const pg=d&&d.query&&d.query.pages,p=pg&&Object.values(pg)[0];
+ const r=p&&p.missing===undefined&&p.extract?{title:p.title,text:p.extract}:null;
+ if(r){if(lang==="fr")FXWT.fr=r.title;if(lang==="en")FXWT.en=r.title}  /* titres retenus pour le nom commun */
+ return r;
+}
+function fxSecs(t){
+ const p=t.split(/^(={2,6})\s*(.+?)\s*\1\s*$/m),S={lead:(p[0]||"").trim(),secs:[]};
+ for(let i=1;i+2<p.length;i+=3)S.secs.push({title:p[i+1].trim(),text:(p[i+2]||"").trim()});
+ return S;
+}
+async function fxFish(sp){
+ const e=(sp.canonicalName||"").split(" ")[1];if(!sp.genus||!e)return null;
+ const d=await getJ("https://fishbase.ropensci.org/species?Genus="+encodeURIComponent(sp.genus)+"&Species="+encodeURIComponent(e));
+ return d&&d.data&&d.data[0]||null;
+}
+function fxWdU(d){
+ const E=d&&d.entities,e=E&&Object.values(E)[0],c=e&&e.claims&&e.claims.P141;if(!c)return null;
+ for(const x of c){const id=x.mainsnak&&x.mainsnak.datavalue&&x.mainsnak.datavalue.value&&x.mainsnak.datavalue.value.id;if(FX2_WDU[id])return FX2_WDU[id]}
+ return null;
+}
+function fxExtr(T){
+ const NUM=C5N,RNG=NUM+"(?:\\s?(?:à|-|–|to)\\s?"+NUM+")?";
+ const o={},rx=(a,b)=>T.match(new RegExp(a+RNG+b,"i"));
+ const cl=v=>String(v).replace(/[\s\u00a0\u202f]+/g," ");
+ const rg=m=>cl(m[1])+(m[2]?"–"+cl(m[2]):"");
+ let m=rx("(?:longueur|taille|mesure|long de|length|measures)[^.\\n]{0,60}?","\\s?(cm|mm|m)\\b");if(m)o.taille=rg(m)+" "+m[3];
+ m=rx("(?:poids|pèse|pesant|masse|weigh(?:s|ing)?|mass)[^.\\n]{0,60}?","\\s?(g|kg)\\b");if(m)o.poids=rg(m)+" "+m[3];
+ m=rx("(?:long[ée]vit[ée]|esp[ée]rance de vie|dur[ée]e de vie|vit jusqu|lifespan|life expectancy|live[sd]? (?:up )?to)[^.\\n]{0,60}?","\\s?(ans|years?)\\b");if(m)o.longevite=rg(m)+" ans";
+ m=rx("(?:ponte|pond|clutch|portée|litter)[^.\\n]{0,50}?","\\s?(œufs|oeufs|eggs|petits|jeunes|young)")||T.match(new RegExp(RNG+"\\s?(œufs|oeufs|eggs)","i"));
+ if(m)o.ponte=rg(m)+" "+m[3].replace("oeufs","œufs");
+ m=T.match(/\b(piscivore|insectivore|carnivore|herbivore|omnivore|granivore|frugivore|nectarivore|planctonophage|d[ée]tritivore|piscivorous|insectivorous|carnivorous|herbivorous|omnivorous|granivorous|frugivorous|nectarivorous)s?\b/i);
+ if(m)o.regime=m[1].toLowerCase();
+ return o;
+}
+function fxLg(t){
+ t=String(t||"");
+ const f=(t.match(/\b(le|la|les|des|du|est|sont|une|dans|avec|pour|sur|par|qui|que|ses|elle|il|au|aux|et|ce|se|sa|son|ont|pas|plus|comme|mais|ou|leur|leurs|cette|ces)\b/gi)||[]).length;
+ const n=(t.match(/\b(the|of|and|is|are|was|were|with|its|from|which|that|for|this|has|have|it|to|an|by|at|be|or|their|they|can|also|than|these|those|when|where|into|but|not)\b/gi)||[]).length;
+ if(f>n)return"fr";
+ if(f===n&&/[éèêàùçôîûœï]/i.test(t))return"fr";
+ return"en";
+}
+function fxLgC(c){
+ if(/Wikipédia fr/.test(c.src))return"fr";
+ if(/Wikipédia en/.test(c.src))return"en";
+ return fxLg(c.txt);
+}
+/* Francais d'abord, puis le texte le plus court (au moins FX2_MIN caracteres) */
+function fxOrd(a){
+ const R=c=>fxLgC(c)==="fr"?0:1;
+ const ok=a.filter(c=>c.txt.length>=FX2_MIN).sort((x,y)=>R(x)-R(y)||x.txt.length-y.txt.length);
+ const ko=a.filter(c=>c.txt.length<FX2_MIN).sort((x,y)=>R(x)-R(y)||y.txt.length-x.txt.length);
+ return ok.concat(ko);
+}
+function fx2Sw(f,k){const c=(FX2C[f]||[])[+k],el=document.getElementById("f2_"+f);if(c&&el)el.value=c.txt}
+
+/* ================================================================== */
+/* 7. TRADUCTION DE L'INTERFACE (FR / EN) */
+var FXCUR=null;
+const FXT={
+ "Pokedex des espèces":"Species Pokedex","espèces":"species","familles":"families","ordres":"orders","pays":"countries","affichées":"shown",
+ "+ Ajouter":"+ Add","Connexion":"Log in","Déconnexion":"Log out","Toutes les classes":"All classes",
+ "Filtrer : nom, famille, ordre…":"Filter: name, family, order…",
+ "Aucune espèce pour l'instant. Connecte-toi puis clique sur « Ajouter ».":"No species yet. Log in, then click “Add”.",
+ "Pas de photo":"No photo","source":"source","Voir la fiche UICN":"View IUCN page",
+ "Fermer":"Close","Modifier":"Edit","Supprimer":"Delete","Tout déplier":"Expand all","Tout replier":"Collapse all",
+ "Morphologie":"Morphology","Comportement":"Behaviour","Alimentation":"Diet","Reproduction":"Breeding",
+ "Répartition":"Distribution","Rôle écologique":"Ecological role","Habitat et répartition":"Habitat and distribution",
+ "Taxonomie":"Taxonomy","Mes observations":"My observations","Carte":"Map","Aucune":"None",
+ "Règne":"Kingdom","Embranchement":"Phylum","Classe":"Class","Ordre":"Order","Famille":"Family","Genre":"Genus","Espèce":"Species",
+ "Statut UICN":"IUCN status","Taille":"Size","Poids":"Weight","Longévité":"Lifespan","Ponte / portée":"Clutch / litter","Régime":"Diet type",
+ "Préoccupation mineure":"Least concern","Quasi menacée":"Near threatened","Vulnérable":"Vulnerable","En danger":"Endangered",
+ "En danger critique":"Critically endangered","Éteinte à l'état sauvage":"Extinct in the wild","Éteinte":"Extinct",
+ "Données insuffisantes":"Data deficient","Non évaluée":"Not evaluated"
+};
+const FXTR=[
+ [/^N° (\d+)/,"No. $1"],
+ [/^Mes observations \((\d+)\)$/,"My observations ($1)"],
+ [/^Photo : (.*)$/,"Photo: $1"],
+ [/^Sources : (.*?) · consulté le (.*)$/,"Sources: $1 · accessed $2"],
+ [/^([A-Z]{2}) · (.+)$/,"$1 · $2"],
+ [/^Densité des observations GBIF[\s\S]*$/,"GBIF observation density (not the official range). Countries are coloured by the number of GBIF observations: darker = more records, i.e. better surveyed, not necessarily more abundant. Turquoise markers: your observations with coordinates."]
+];
+function fxT(s){
+ const t=s.trim();if(!t)return null;
+ let r=FXT[t];
+ if(r===undefined){const m=/^(.+?)\s*\((\d{4})\)$/.exec(t);if(m&&FXT[m[1]]!==undefined)r=FXT[m[1]]+" ("+m[2]+")"}
+ if(r===undefined){const m=/^([A-Z]{2}) · (.+)$/.exec(t);if(m&&FXT[m[2]]!==undefined)r=m[1]+" · "+FXT[m[2]]}
+ if(r===undefined){for(const p of FXTR){if(p[0].test(t)){r=t.replace(p[0],p[1]);break}}}
+ return r===undefined?null:s.replace(t,()=>r);
+}
+const FXO=new WeakMap();
+function fxAdm(){const md=document.getElementById("md");return md&&md.querySelector("textarea,input:not([type=checkbox])")?true:false}
+function fxTn(n,adm){
+ if(FXO.has(n))return;
+ const p=n.parentNode;if(!p)return;
+ if(/^(SCRIPT|STYLE|TEXTAREA)$/.test(p.nodeName))return;
+ if(adm&&p.closest&&p.closest("#md"))return;
+ const r=fxT(n.nodeValue);
+ if(r!==null&&r!==n.nodeValue){FXO.set(n,n.nodeValue);n.nodeValue=r}
+}
+function fxTr(root){
+ if(LANG!=="en"||!root)return;
+ const adm=fxAdm();
+ if(root.nodeType===3){fxTn(root,adm);return}
+ const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);let n;
+ while((n=w.nextNode()))fxTn(n,adm);
+ if(root.querySelectorAll)root.querySelectorAll("[placeholder],[title]").forEach(el=>{
+  if(adm&&el.closest("#md"))return;
+  ["placeholder","title"].forEach(a=>{
+   const v=el.getAttribute(a);if(v==null)return;
+   const r=fxT(v);
+   if(r!==null&&r!==v){if(!el.hasAttribute("data-fr-"+a))el.setAttribute("data-fr-"+a,v);el.setAttribute(a,r)}
+  });
+ });
+}
+function fxRestore(){
+ const w=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);let n;
+ while((n=w.nextNode())){if(FXO.has(n)){n.nodeValue=FXO.get(n);FXO.delete(n)}}
+ ["placeholder","title"].forEach(a=>document.querySelectorAll("[data-fr-"+a+"]").forEach(el=>{el.setAttribute(a,el.getAttribute("data-fr-"+a));el.removeAttribute("data-fr-"+a)}));
+}
+new MutationObserver(ms=>{
+ if(LANG!=="en")return;
+ ms.forEach(m=>m.addedNodes.forEach(n=>{if(n.nodeType===1||n.nodeType===3)fxTr(n)}));
+}).observe(document.body,{childList:true,subtree:true});
+function fxView(e){
+ const n=e.en||{},v=Object.assign({},e);
+ if(n.nom_commun)v.nom_commun=n.nom_commun;
+ FX_CH.forEach(c=>{const k=c[0];if(n[k])v[k]=n[k];else if(e[k])v[k]=C5MK+e[k]});
+ const x=Object.assign({},e.extra||{}),nx=n.x||{};
+ FX_ID.forEach(r=>{const k=r[0];if(x[k]&&!nx[k])x[k]=fxIdEn(k,x[k])});   /* valeur sans version anglaise : conversion a l'affichage */
+ v.extra=Object.assign(x,nx);
+ return v;
+}
+function fxApplyLang(){
+ document.documentElement.lang=LANG;
+ document.title=LANG==="en"?"Species Pokedex":"Pokedex des espèces";
+ const b=document.getElementById("lang");
+ if(b)b.innerHTML='<span class="lg'+(LANG==="fr"?" on":"")+'">FR</span> | <span class="lg'+(LANG==="en"?" on":"")+'">EN</span>';
+ if(LANG==="en")fxTr(document.body);else fxRestore();
+ render();
+ if(FXCUR&&document.querySelector("#ov.on #md .fxn"))openFiche(FXCUR);
+}
+function toggleLang(){LANG=LANG==="fr"?"en":"fr";try{localStorage.setItem("pk_lang",LANG)}catch(x){}fxApplyLang()}
+
+/* ================================================================== */
+/* 8. TEXTES : detection de l'anglais et affichage d'un bloc */
+const EN_MIN_CAR=60;   /* sous cette longueur, on ne devine pas la langue */
+const EN_MIN_MOTS=4;   /* nombre minimal de mots anglais courants pour conclure */
+const EN_RX=/\b(the|of|and|is|are|was|were|with|its|from|which|that|for|this|has|have|it|to|an|by|at|be|or|their|they|can|also|than|these|those|when|where|into|but|not)\b/gi;
+const FR_RX=/\b(le|la|les|des|du|est|sont|une|dans|avec|pour|sur|par|qui|que|ses|elle|il|au|aux|et|ce|se|sa|son|ont|pas|plus|comme|mais|ou|leur|leurs|cette|ces)\b/gi;
+function estEn(t){
+ t=String(t||"");if(t.length<EN_MIN_CAR)return false;
+ const n=(t.match(EN_RX)||[]).length,f=(t.match(FR_RX)||[]).length;
+ return n>=EN_MIN_MOTS&&n>2*f;
+}
+/* Bloc de texte d'une fiche. Marques : C5MK = texte francais de repli affiche en vue EN (pastille FR) ;
+   texte anglais en vue FR = italique grise + pastille EN. Un texte anglais range dans le champ francais s'affiche normalement en vue EN. */
+function fxBloc(t,v){
+ if(!v)return "";
+ let s=String(v),fr=false;
+ if(s.indexOf(C5MK)===0){fr=true;s=s.slice(C5MK.length)}
+ const lab=t?'<div class="lab">'+esc(t)+'</div>':'';
+ if(estEn(s)){
+  if(LANG!=="en")return lab+'<div class="fxp fxfr" title="Texte en anglais (pas de version française)"><span class="fxfrb">EN</span> '+esc(s)+'</div>';
+  fr=false;
+ }
+ return lab+'<div class="fxp'+(fr?' fxfr':'')+'">'+(fr?'<span class="fxfrb">FR</span> ':'')+esc(s)+'</div>';
+}
+
+/* ================================================================== */
+/* 9. GRILLE : chargement, cartes, rendu, cadrage de la photo */
+async function load(){
+ const a=await SB.from("especes").select("*").order("numero");
+ const b=await SB.from("observations").select("*").order("date_obs",{ascending:false});
+ const er=a.error||b.error;
+ if(er){$("#grid").innerHTML=`<p style="padding:22px;color:#e88">Erreur Supabase : ${esc(er.message)}</p>`;return}
+ ESP=a.data;OBS={};
+ b.data.forEach(o=>{(OBS[o.espece_id]=OBS[o.espece_id]||[]).push(o)});
+ ESP.forEach((e,i)=>{e.numero=i+1});   /* numero affiche = rang reel (001, 002...) */
+ render();
+}
+const card=e=>{
+ const p=fxPremiere(e.id),d=p?fxDateTxt(p.date_obs,p.date_prec):"",g=fxGroupe(e),gl=g==="autres"?(e.classe||""):fxGrpNom(g);
+ return `<div class="card" onclick="openFiche('${e.id}')"><div class="ph" style="${e.photo_url?`background-image:url('${esc(e.photo_url)}')`:""}">${e.photo_url?"":"Pas de photo"}</div><div class="cb"><div class="no">${esc(gl)}${d?" · "+esc(d):""}</div><div class="nm">${esc(e.nom_commun||e.nom_latin)}</div><div class="la">${esc(e.nom_latin)}</div><div style="margin-top:6px">${pill(e.uicn)}</div></div></div>`;
+};
+function renderBase(){
+ const q=$("#q").value.toLowerCase(),val=id=>{const e=$(id);return e?e.value:""};
+ const lg=LANG==="en"?"en":"fr",P={},Y={},pres=new Set(ESP.map(fxGroupe));
+ ESP.forEach(e=>(OBS[e.id]||[]).forEach(o=>{const k=fxPaysCle(o);if(k)P[k]=fxPaysLib(o);if(o.date_obs)Y[String(o.date_obs).slice(0,4)]=1}));
+ fxFillSel("#cl",T2("Tous les groupes","All groups"),FX_GRP.filter(x=>pres.has(x[0])).map(x=>[x[0],T2(x[1],x[2])+" ("+ESP.filter(e=>fxGroupe(e)===x[0]).length+")"]),val("#cl"));
+ fxFillSel("#pf",T2("Tous les pays","All countries"),Object.keys(P).map(k=>[k,P[k]]).sort((a,b)=>a[1].localeCompare(b[1],lg)),val("#pf"));
+ fxFillSel("#af",T2("Toutes les années","All years"),Object.keys(Y).sort().reverse().map(y=>[y,y]),val("#af"));
+ fxFillSel("#so",null,[["chrono",T2("Chronologique","Chronological")],["recent",T2("Plus récentes d'abord","Newest first")],["alpha",T2("Alphabétique","Alphabetical")],["taxo",T2("Taxonomique","Taxonomic")],["ajout",T2("Ordre d'ajout","Order added")]],val("#so")||fxSortGet());
+ const G=val("#cl"),PF=val("#pf"),AF=val("#af"),SO=val("#so");
+ const obsOK=o=>(!PF||fxPaysCle(o)===PF)&&(!AF||String(o.date_obs||"").slice(0,4)===AF);
+ const l=fxTri(ESP.filter(e=>(!G||fxGroupe(e)===G)&&((!PF&&!AF)||(OBS[e.id]||[]).some(obsOK))&&(!q||[e.nom_commun,e.nom_latin,e.famille,e.ordre].join(" ").toLowerCase().includes(q))),SO);
+ const nb=k=>new Set(ESP.map(e=>e[k]).filter(Boolean)).size;
+ $("#st").innerHTML='<div><b>'+ESP.length+'</b>espèces</div><div><b>'+nb("famille")+'</b>familles</div><div><b>'+nb("ordre")+'</b>ordres</div><div><b>'+Object.keys(P).length+'</b>pays</div>'+((G||PF||AF||q)?'<div><b>'+l.length+'</b>affichées</div>':"");
+ $("#grid").innerHTML=l.length?l.map(card).join(""):'<p style="color:var(--mut)">'+(ESP.length?T2("Aucune espèce ne correspond aux filtres.","No species matches the filters."):T2("Aucune espèce pour l'instant. Connecte-toi puis clique sur « Ajouter ».","No species yet. Log in, then click “Add”."))+'</p>';
+}
+function fbGrid(){
+ document.querySelectorAll("#grid .card").forEach(c=>{
+  const m=/openFiche\('([^']+)'\)/.exec(c.getAttribute("onclick")||"");if(!m)return;
+  const e=ESP.find(x=>x.id===m[1]),f=e&&e.extra&&e.extra.focus,p=c.querySelector(".ph");
+  if(p&&f&&f.length===2)p.style.backgroundPosition=f[0]+"% "+f[1]+"%";
+ });
+}
+function render(){
+ if(LANG==="en"){const bak=ESP;ESP=ESP.map(fxView);try{renderBase()}finally{ESP=bak}}   /* vue anglaise superposee au francais */
+ else renderBase();
+ fbGrid();
+}
+
+/* ================================================================== */
+/* 10. FICHE : ouverture, bandeau photo, navigation */
+/* ===== PATCH DATE-PRECISION ===== */
+/* Dates d'observation avec precision : jour, mois ou annee (colonne observations.date_prec). Le tri reste correct :
+   une date partielle est stockee au 1er du mois ou au 1er janvier. */
+const FX_MOIS={fr:["janvier","février","mars","avril","mai","juin","juillet","août","septembre","octobre","novembre","décembre"],
+ en:["January","February","March","April","May","June","July","August","September","October","November","December"]};
+function fxDateTxt(d,prec){
+ const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(String(d||""));if(!m)return "";
+ const y=m[1],mo=+m[2],jr=+m[3],M=FX_MOIS[LANG==="en"?"en":"fr"];
+ if(prec==="annee")return y;
+ if(prec==="mois")return M[mo-1]+" "+y;
+ return LANG==="en"?M[mo-1]+" "+jr+", "+y:jr+(jr===1?"er ":" ")+M[mo-1]+" "+y;
+}
+function fxDateFields(){
+ const M=FX_MOIS[LANG==="en"?"en":"fr"];
+ return '<div class="row"><input id="f_oy" type="number" min="1900" max="2100" placeholder="'+T2("Année (ex. 2019)","Year (e.g. 2019)")+'">'+
+  '<select id="f_om"><option value="">'+T2("Mois (si connu)","Month (if known)")+'</option>'+M.map((n,i)=>'<option value="'+(i+1)+'">'+n+'</option>').join("")+'</select>'+
+  '<input id="f_od" type="number" min="1" max="31" placeholder="'+T2("Jour (si connu)","Day (if known)")+'"></div>'+
+  '<div class="cr">'+T2("Laisse le mois et le jour vides si tu ne les connais pas : la date sera enregistrée comme « année » ou « mois ».","Leave month and day empty if unknown: the date is saved as “year” or “month”.")+'</div>';
+}
+function fxObsDate(){
+ const v=id=>{const e=document.getElementById(id);return e?e.value.trim():""};
+ const y=v("f_oy"),mo=v("f_om"),jr=v("f_od");
+ if(!y&&!mo&&!jr)return{date:null,prec:"jour"};
+ if(!/^\d{4}$/.test(y)||+y<1900||+y>2100)return{err:"Année invalide : 4 chiffres, entre 1900 et 2100 (ex. 2019)."};
+ if(!mo&&jr)return{err:"Un jour est saisi sans mois : choisis le mois ou efface le jour."};
+ if(!mo)return{date:y+"-01-01",prec:"annee"};
+ const mm=String(mo).padStart(2,"0");
+ if(!jr)return{date:y+"-"+mm+"-01",prec:"mois"};
+ const J=+jr,d=new Date(Date.UTC(+y,+mo-1,J));
+ if(!(J>=1)||d.getUTCMonth()!==+mo-1)return{err:"Ce jour n'existe pas pour ce mois."};
+ return{date:y+"-"+mm+"-"+String(J).padStart(2,"0"),prec:"jour"};
+}
+/* ===== FIN PATCH DATE-PRECISION ===== */
+/* ===== PATCH PAYS ===== */
+/* Pays choisi dans une liste (codes ISO 3166-1 + Kosovo XK). Les noms viennent du navigateur (Intl.DisplayNames) :
+   ils suivent la langue de l'interface. On enregistre le code (observations.pays_code) et le nom francais (observations.pays). */
+const FX_ISO=("AD AE AF AG AI AL AM AO AQ AR AS AT AU AW AX AZ BA BB BD BE BF BG BH BI BJ BL BM BN BO BQ BR BS BT BV BW BY BZ "+
+ "CA CC CD CF CG CH CI CK CL CM CN CO CR CU CV CW CX CY CZ DE DJ DK DM DO DZ EC EE EG EH ER ES ET FI FJ FK FM FO FR "+
+ "GA GB GD GE GF GG GH GI GL GM GN GP GQ GR GS GT GU GW GY HK HM HN HR HT HU ID IE IL IM IN IO IQ IR IS IT JE JM JO JP "+
+ "KE KG KH KI KM KN KP KR KW KY KZ LA LB LC LI LK LR LS LT LU LV LY MA MC MD ME MF MG MH MK ML MM MN MO MP MQ MR MS MT MU MV MW MX MY MZ "+
+ "NA NC NE NF NG NI NL NO NP NR NU NZ OM PA PE PF PG PH PK PL PM PN PR PS PT PW PY QA RE RO RS RU RW "+
+ "SA SB SC SD SE SG SH SI SJ SK SL SM SN SO SR SS ST SV SX SY SZ TC TD TF TG TH TJ TK TL TM TN TO TR TT TV TW TZ "+
+ "UA UG UM US UY UZ VA VC VE VG VI VN VU WF WS XK YE YT ZA ZM ZW").split(" ");
+const FX_PN={};
+function fxPaysNom(c,lang){
+ lang=lang||(LANG==="en"?"en":"fr");
+ if(!(lang in FX_PN)){try{FX_PN[lang]=new Intl.DisplayNames([lang],{type:"region"})}catch(x){FX_PN[lang]=null}}
+ try{return(FX_PN[lang]&&FX_PN[lang].of(c))||c}catch(x){return c}
+}
+function fxPaysTxt(o){return o&&o.pays_code?fxPaysNom(o.pays_code):((o&&o.pays)||"")}
+function fxPaysSelect(){
+ const lg=LANG==="en"?"en":"fr";
+ const L=FX_ISO.map(c=>[c,fxPaysNom(c,lg)]).sort((a,b)=>a[1].localeCompare(b[1],lg));
+ return '<select id="f_pc" onchange="fxPaysAutre()"><option value="">'+T2("Pays…","Country…")+'</option>'+
+  L.map(x=>'<option value="'+x[0]+'">'+esc(x[1])+'</option>').join("")+
+  '<option value="__autre">'+T2("Autre (saisie libre)…","Other (free text)…")+'</option></select>'+
+  '<input id="f_pays" placeholder="'+T2("Nom du pays ou de la région","Country or region name")+'" style="display:none">';
+}
+function fxPaysAutre(){const s=document.getElementById("f_pc"),i=document.getElementById("f_pays");if(s&&i)i.style.display=s.value==="__autre"?"":"none"}
+function fxObsPays(){
+ const s=document.getElementById("f_pc"),i=document.getElementById("f_pays"),v=s?s.value:"";
+ if(v==="__autre"){const t=i&&i.value.trim();return{pays:t||null,code:null}}
+ if(v)return{pays:fxPaysNom(v,"fr"),code:v};
+ return{pays:null,code:null};
+}
+/* ===== FIN PATCH PAYS ===== */
+/* ===== PATCH OBSERVATIONS ===== */
+/* Observations : ajouter, modifier, supprimer depuis la fiche (connecte). Reutilise les champs date (PATCH DATE-PRECISION) et pays (PATCH PAYS). */
+function fxObsLigne(o){
+ return "• "+esc(fxDateTxt(o.date_obs,o.date_prec)||"date ?")+" · "+esc([o.lieu,fxPaysTxt(o)].filter(Boolean).join(", "))+(o.note?" — "+esc(o.note):"");
+}
+function fxObsAdmin(ob,espId){
+ return '<div class="fxo-add"><button type="button" class="pri" onclick="openObsEdit(null,\''+espId+'\')">'+T2("+ Ajouter une observation","+ Add an observation")+'</button></div>'+
+  (ob.length?ob.map(o=>'<div class="fxo"><span>'+fxObsLigne(o)+'</span>'+
+   '<button type="button" class="fxob" onclick="openObsEdit(\''+o.id+'\',\''+espId+'\')">'+T2("Modifier","Edit")+'</button>'+
+   '<button type="button" class="fxob" style="color:#e88" onclick="delObs(\''+o.id+'\',\''+espId+'\')">'+T2("Supprimer","Delete")+'</button></div>').join(""):
+   '<div class="fxp">'+T2("Aucune","None")+'</div>');
+}
+function fxObsRemplir(o){
+ const set=(id,v)=>{const el=document.getElementById(id);if(el&&v!=null)el.value=v};
+ const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(o.date_obs||"");
+ if(m){
+  set("f_oy",m[1]);
+  if(o.date_prec!=="annee")set("f_om",String(+m[2]));
+  if(!o.date_prec||o.date_prec==="jour")set("f_od",String(+m[3]));
+ }
+ set("f_lieu",o.lieu);
+ if(o.pays_code)set("f_pc",o.pays_code);
+ else if(o.pays){set("f_pc","__autre");set("f_pays",o.pays);fxPaysAutre()}
+ set("f_lat",o.lat);set("f_lon",o.lon);set("f_note",o.note);
+}
+function openObsEdit(obsId,espId){
+ if(!SES)return;
+ const e=ESP.find(x=>x.id===espId);if(!e)return;
+ const o=obsId?(OBS[espId]||[]).find(x=>x.id===obsId):null;
+ if(obsId&&!o)return;
+ modal('<h2>'+(o?"Modifier l'observation":"Ajouter une observation")+'</h2><div class="cr">'+esc(e.nom_commun||e.nom_latin)+'</div>'+
+  '<div class="sec"><div class="lab">Date</div>'+fxDateFields()+'<div class="row"><input id="f_lieu" placeholder="Lieu">'+fxPaysSelect()+'</div>'+
+  fxPickMapHtml()+
+  '<textarea id="f_note" rows="2" placeholder="Note"></textarea></div>'+
+  '<div style="margin-top:14px;display:flex;gap:8px"><button class="pri" onclick="saveObs(\''+(obsId||"")+'\',\''+espId+'\')">Enregistrer</button><button onclick="openFiche(\''+espId+'\')">Annuler</button></div>');
+ if(o)fxObsRemplir(o);
+ fxPickMapInit();
+}
+async function saveObs(obsId,espId){
+ const od=fxObsDate();if(od.err){alert(od.err);return}
+ const op=fxObsPays();
+ const g=id=>{const e=document.getElementById(id);return e&&e.value.trim()?e.value.trim():null};
+ const nm=id=>{const v=g(id);if(v==null)return null;const n=+v.replace(",",".");return isNaN(n)?NaN:n};
+ const lat=nm("f_lat"),lon=nm("f_lon");
+ if(Number.isNaN(lat)||Number.isNaN(lon)||(lat!=null&&Math.abs(lat)>90)||(lon!=null&&Math.abs(lon)>180)){alert("Latitude (-90 à 90) ou longitude (-180 à 180) invalide.");return}
+ if((lat==null)!==(lon==null)){alert("Renseigne la latitude ET la longitude, ou aucune des deux.");return}
+ const row={date_obs:od.date,date_prec:od.prec,lieu:g("f_lieu"),pays:op.pays,pays_code:op.code,lat:lat,lon:lon,note:g("f_note")};
+ let r;
+ if(obsId)r=await SB.from("observations").update(row).eq("id",obsId).select("id");
+ else{row.espece_id=espId;r=await SB.from("observations").insert(row).select("id")}
+ if(r.error)return alert("Erreur : "+r.error.message);
+ if(!r.data||!r.data.length)return alert("Rien n'a été enregistré : droits insuffisants sur la table observations ?");
+ await load();openFiche(espId);fxGo("fx_obs");
+}
+async function delObs(obsId,espId){
+ const n=(OBS[espId]||[]).length;
+ if(!confirm(n<=1?"Supprimer cette observation ? C'est la dernière : l'espèce restera dans ta liste, sans observation.":"Supprimer cette observation ?"))return;
+ const r=await SB.from("observations").delete().eq("id",obsId).select("id");
+ if(r.error)return alert("Erreur : "+r.error.message);
+ if(!r.data||!r.data.length)return alert("Rien n'a été supprimé : droits insuffisants sur la table observations ?");
+ await load();openFiche(espId);fxGo("fx_obs");
+}
+/* ===== FIN PATCH OBSERVATIONS ===== */
+/* ===== PATCH CARTE-POINT ===== */
+/* Poser le lieu d'une observation sur une carte : clic ou glisser du repere -> remplit latitude / longitude (champs replies). */
+function fxPickMapHtml(){
+ return '<div class="lab">'+T2("Lieu sur la carte : clique pour poser le point, glisse le repère pour ajuster","Place on the map: click to drop the pin, drag it to adjust")+'</div>'+
+  '<div class="fxps"><input id="fx_ps" type="search" autocomplete="off" placeholder="'+T2("Chercher un lieu (ville, lac, parc…)","Search a place (city, lake, park…)")+'"><div id="fx_psl"></div></div><div id="fx_pm"></div>'+
+  '<div class="fxct"><label>'+T2("Fond","Base")+' <select id="fx_pmb"><option value="dark">'+T2("Sombre","Dark")+'</option><option value="plan">'+T2("Plan","Street")+'</option><option value="sat">'+T2("Satellite","Satellite")+'</option></select></label>'+
+  '<span class="cr" id="fx_pmc"></span><button type="button" id="fx_pme">'+T2("Effacer le point","Clear the point")+'</button></div>'+
+  '<details class="fxd" style="margin-top:6px"><summary>'+T2("Coordonnées","Coordinates")+'</summary><div class="fxb"><div class="row"><input id="f_lat" placeholder="Latitude (ex. 46.15)"><input id="f_lon" placeholder="Longitude (ex. -1.15)"></div></div></details>';
+}
+function fxPickMapInit(){
+ const el=document.getElementById("fx_pm");if(!el)return;
+ if(!window.L){el.innerHTML='<p style="padding:14px;color:#e88">'+T2("Carte indisponible (Leaflet non chargé).","Map unavailable (Leaflet not loaded).")+'</p>';return}
+ try{if(window.FXPM)window.FXPM.remove()}catch(x){}
+ const ES="https://server.arcgisonline.com/ArcGIS/rest/services/";
+ const BM={
+  dark:{u:ES+"Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}",r:ES+"Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}"},
+  plan:{u:ES+"World_Street_Map/MapServer/tile/{z}/{y}/{x}"},
+  sat:{u:ES+"World_Imagery/MapServer/tile/{z}/{y}/{x}"}
+ };
+ const m=L.map(el,{minZoom:1,maxZoom:16,worldCopyJump:true,zoomSnap:1}).setView([20,10],1);
+ window.FXPM=m;
+ m.scrollWheelZoom.disable();                      /* la molette fait defiler la fenetre ; elle zoome seulement apres un clic dans la carte */
+ m.on("focus",()=>m.scrollWheelZoom.enable());m.on("blur",()=>m.scrollWheelZoom.disable());
+ let cur=null,curR=null,fb=false;
+ const setBM=k=>{
+  if(cur)m.removeLayer(cur);if(curR)m.removeLayer(curR);
+  const b=BM[k];
+  cur=L.tileLayer(b.u,{attribution:"Tiles © Esri",maxZoom:16});
+  cur.on("tileerror",()=>{if(fb)return;fb=true;m.removeLayer(cur);cur=L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{attribution:"© OpenStreetMap",className:k==="dark"?"dk":"",maxZoom:16}).addTo(m);cur.bringToBack()});
+  cur.addTo(m);cur.bringToBack();
+  curR=b.r?L.tileLayer(b.r,{maxZoom:16}).addTo(m):null;
+ };
+ setBM("dark");
+ const lat=document.getElementById("f_lat"),lon=document.getElementById("f_lon"),info=document.getElementById("fx_pmc");
+ let pin=null;
+ const dire=()=>{if(info)info.textContent=(lat.value&&lon.value)?lat.value+" ; "+lon.value:T2("Aucun point posé","No point set")};
+ const poser=(ll,centrer)=>{
+  const w=ll.wrap?ll.wrap():ll,la=+(+w.lat).toFixed(5),lo=+(+w.lng).toFixed(5);
+  lat.value=la;lon.value=lo;dire();
+  if(pin)pin.setLatLng([la,lo]);
+  else{
+   pin=L.marker([la,lo],{draggable:true,icon:L.divIcon({className:"",html:'<div class="fxpin"></div>',iconSize:[14,14],iconAnchor:[7,7]})}).addTo(m);
+   pin.on("dragend",()=>poser(pin.getLatLng()));
+  }
+  if(centrer)m.setView([la,lo],Math.max(m.getZoom(),8));
+ };
+ const lire=()=>{const a=parseFloat(String(lat.value).replace(",",".")),o=parseFloat(String(lon.value).replace(",","."));return(isFinite(a)&&isFinite(o)&&Math.abs(a)<=90&&Math.abs(o)<=180)?[a,o]:null};
+ m.on("click",ev=>poser(ev.latlng,false));
+ window.FXPM_VERS=(la,lo,ext)=>{   /* appelee par la recherche de lieu */
+  poser(L.latLng(la,lo),false);
+  if(ext&&ext.length===4){try{m.fitBounds([[ext[3],ext[0]],[ext[1],ext[2]]],{maxZoom:14,padding:[20,20]});return}catch(x){}}
+  m.setView([la,lo],12);
+ };
+ const saisie=()=>{const p=lire();if(p)poser(L.latLng(p[0],p[1]),true);else if(info)info.textContent=(lat.value||lon.value)?T2("Coordonnées invalides","Invalid coordinates"):T2("Aucun point posé","No point set")};
+ lat.addEventListener("change",saisie);lon.addEventListener("change",saisie);
+ document.getElementById("fx_pmb").addEventListener("change",ev=>setBM(ev.target.value));
+ document.getElementById("fx_pme").addEventListener("click",()=>{lat.value="";lon.value="";if(pin){m.removeLayer(pin);pin=null}dire()});
+ const p0=lire();
+ if(p0)poser(L.latLng(p0[0],p0[1]),true);else dire();   /* observation existante : on part de son point */
+ setTimeout(()=>{try{m.invalidateSize()}catch(x){}},120);
+ fxLieuInit();
+}
+/* ===== FIN PATCH CARTE-POINT ===== */
+/* ===== PATCH LIEU-RECHERCHE ===== */
+/* Recherche de lieu avec suggestions (Photon, fait pour la frappe) ; repli sur le service OpenStreetMap (Nominatim) UNIQUEMENT sur clic :
+   sa politique interdit l'autocompletion. Un lieu choisi pose le point sur la carte, remplit « Lieu » et selectionne le pays. */
+const FX_LS={cache:{}};
+function fxLieuLabel(nom,ville,region){return[nom,ville,region].filter((x,i,t)=>x&&t.indexOf(x)===i).join(", ")}
+async function fxLieuPhoton(q){
+ const lg=LANG==="en"?"en":"fr";
+ const r=await fetch("https://photon.komoot.io/api/?q="+encodeURIComponent(q)+"&limit=6&lang="+lg);
+ if(!r.ok)throw new Error("photon "+r.status);
+ const d=await r.json();
+ return(d.features||[]).filter(f=>f.geometry&&f.geometry.coordinates).map(f=>{
+  const p=f.properties||{},c=f.geometry.coordinates,label=fxLieuLabel(p.name||p.street||"",p.city||p.county||p.district||"",p.state||"");
+  return{lat:+c[1],lon:+c[0],nom:p.name||p.street||label,label:label,cc:String(p.countrycode||"").toUpperCase(),pays:p.country||"",ext:(p.extent&&p.extent.length===4)?p.extent:null};
+ });
+}
+async function fxLieuNomi(q){
+ const lg=LANG==="en"?"en":"fr";
+ const r=await fetch("https://nominatim.openstreetmap.org/search?q="+encodeURIComponent(q)+"&format=jsonv2&limit=6&addressdetails=1&accept-language="+lg);
+ if(!r.ok)throw new Error("nominatim "+r.status);
+ const d=await r.json();
+ return(d||[]).map(x=>{
+  const a=x.address||{},nom=x.name||String(x.display_name||"").split(",")[0],label=fxLieuLabel(nom,a.city||a.town||a.village||a.municipality||a.county||"",a.state||""),b=x.boundingbox;
+  return{lat:+x.lat,lon:+x.lon,nom:nom,label:label,cc:String(a.country_code||"").toUpperCase(),pays:a.country||"",ext:(b&&b.length===4)?[+b[2],+b[1],+b[3],+b[0]]:null};
+ });
+}
+function fxLieuChoisir(r){
+ if(!r)return;
+ const lieu=document.getElementById("f_lieu");if(lieu)lieu.value=r.label||r.nom;
+ const sel=document.getElementById("f_pc");
+ if(sel){
+  if(r.cc&&FX_ISO.indexOf(r.cc)>=0){sel.value=r.cc;fxPaysAutre()}
+  else if(r.pays){sel.value="__autre";fxPaysAutre();const t=document.getElementById("f_pays");if(t)t.value=r.pays}
+ }
+ if(window.FXPM_VERS)window.FXPM_VERS(r.lat,r.lon,r.ext);
+}
+function fxLieuInit(){
+ const inp=document.getElementById("fx_ps"),box=document.getElementById("fx_psl");if(!inp||!box)return;
+ let tmr=null,seq=0,items=[];
+ const montrer=h=>{box.innerHTML=h;box.style.display=h?"block":"none"};
+ const osm='<div data-nomi="1"><b>'+T2("Chercher avec OpenStreetMap","Search with OpenStreetMap")+'</b><small>'+T2("autre service, sur clic seulement","other service, on click only")+'</small></div>';
+ const lancer=async(q,nomi)=>{
+  const n=++seq,cle=(nomi?"n:":"p:")+q;
+  montrer('<div class="cr" style="padding:7px 10px">'+T2("Recherche…","Searching…")+'</div>');
+  let res=FX_LS.cache[cle],err=null;
+  if(!res){try{res=await(nomi?fxLieuNomi(q):fxLieuPhoton(q));FX_LS.cache[cle]=res}catch(x){err=x}}
+  if(n!==seq)return;                                  /* reponse perimee : une recherche plus recente est partie */
+  if(err){montrer('<div class="cr" style="padding:7px 10px">'+T2("Service de recherche indisponible. Pose le point sur la carte.","Search service unavailable. Drop the pin on the map.")+'</div>'+(nomi?"":osm));return}
+  items=res;
+  if(!res.length){montrer('<div class="cr" style="padding:7px 10px">'+T2("Aucun lieu trouvé. Pose le point sur la carte.","No place found. Drop the pin on the map.")+'</div>'+(nomi?"":osm));return}
+  montrer(res.map((r,i)=>'<div data-i="'+i+'">'+esc(r.nom)+'<small>'+esc([r.label,r.pays].filter(Boolean).join(" · "))+'</small></div>').join("")+(nomi?"":osm));
+ };
+ inp.addEventListener("input",()=>{
+  clearTimeout(tmr);const q=inp.value.trim();
+  if(q.length<3){seq++;montrer("");return}
+  tmr=setTimeout(()=>lancer(q,false),400);            /* attend la fin de la frappe */
+ });
+ inp.addEventListener("keydown",ev=>{
+  if(ev.key!=="Enter")return;
+  ev.preventDefault();clearTimeout(tmr);
+  const q=inp.value.trim();if(q.length>=2)lancer(q,false);
+ });
+ box.addEventListener("mousedown",ev=>ev.preventDefault());   /* garde le focus : le clic n'est pas avale par le blur */
+ box.addEventListener("click",ev=>{
+  const d=ev.target.closest("[data-i],[data-nomi]");if(!d)return;
+  if(d.dataset.nomi){const q=inp.value.trim();if(q.length>=2)lancer(q,true);return}
+  const r=items[+d.dataset.i];fxLieuChoisir(r);inp.value=r?r.nom:inp.value;montrer("");
+ });
+ inp.addEventListener("blur",()=>setTimeout(()=>montrer(""),150));
+}
+/* ===== FIN PATCH LIEU-RECHERCHE ===== */
+/* ===== PATCH IDENTITE-EN ===== */
+/* Fiche d'identite en anglais : quand une valeur n'a pas de version anglaise saisie, on convertit les formes courantes
+   (oeufs -> eggs, ans -> years, virgule decimale -> point, regimes...). Affichage seulement : rien n'est modifie en base.
+   Les valeurs inhabituelles restent en francais : saisis-les dans « Version anglaise » (Modifier). */
+const FXID_MOTS=[
+ ["œufs?|oeufs?",x=>/s$/i.test(x)?"eggs":"egg"],["petits|jeunes","young"],["portées?",x=>/s$/i.test(x)?"litters":"litter"],
+ ["ans?",x=>/s$/i.test(x)?"years":"year"],["mois","months"],["jours?",x=>/s$/i.test(x)?"days":"day"],["semaines?",x=>/s$/i.test(x)?"weeks":"week"],
+ ["(?:carnivore|herbivore|omnivore|insectivore|piscivore|granivore|frugivore|nectarivore)s?",x=>x.replace(/s$/i,"").replace(/e$/i,"")+"ous"],
+ ["planctonophages?","planktivorous"],["d[ée]tritivores?","detritivorous"],["environ","about"],["env\\.","approx."]
+];
+function fxIdEn(k,v){
+ let s=String(v);
+ s=s.replace(/(\d),(?!\d{3}(?!\d))(\d)/g,"$1.$2");                       /* virgule decimale -> point (1,5 -> 1.5) ; 1,500 reste */
+ s=s.replace(/(\d)[ \u00a0\u202f](?=\d{3}(?!\d))/g,"$1,");                /* milliers : 20 000 -> 20,000 */
+ s=s.replace(/(\d)\s*à\s*(\d)/g,"$1 to $2");                              /* 6 à 7 -> 6 to 7 */
+ FXID_MOTS.forEach(m=>{
+  s=s.replace(new RegExp("(^|[^A-Za-zÀ-ÿŒœ])("+m[0]+")(?![A-Za-zÀ-ÿŒœ])","gi"),(t,p,x)=>{
+   let r=typeof m[1]==="function"?m[1](x):m[1];
+   if(/^[A-ZÀ-Ý]/.test(x))r=r.charAt(0).toUpperCase()+r.slice(1);
+   return p+r;
+  });
+ });
+ return s;
+}
+/* ===== FIN PATCH IDENTITE-EN ===== */
+/* ===== PATCH TRI-FILTRES ===== */
+/* Plus de numero : tri chronologique par date de premiere observation, compteurs (dont pays), filtres par groupe / pays / annee. */
+const FX_GRP=[
+ ["poissons","Poissons","Fish",FX2_FISH],["oiseaux","Oiseaux","Birds",["Aves"]],["mammiferes","Mammifères","Mammals",["Mammalia"]],
+ ["reptiles","Reptiles","Reptiles",["Reptilia"]],["amphibiens","Amphibiens","Amphibians",["Amphibia"]],["insectes","Insectes","Insects",["Insecta"]],
+ ["arachnides","Arachnides","Arachnids",["Arachnida"]],
+ ["crustaces","Crustacés","Crustaceans",["Malacostraca","Branchiopoda","Hexanauplia","Ostracoda","Thecostraca","Copepoda"]],
+ ["mollusques","Mollusques","Molluscs",["Gastropoda","Bivalvia","Cephalopoda","Polyplacophora","Scaphopoda"]],
+ ["autres","Autres","Others",null]
+];
+function fxGroupe(e){const g=FX_GRP.find(x=>x[3]&&x[3].indexOf(e.classe)>=0);return g?g[0]:"autres"}
+function fxGrpNom(k){const g=FX_GRP.find(x=>x[0]===k);return g?T2(g[1],g[2]):k}
+function fxPremiere(id){
+ const l=(OBS[id]||[]).filter(o=>o.date_obs);if(!l.length)return null;
+ return l.slice().sort((a,b)=>String(a.date_obs).localeCompare(String(b.date_obs)))[0];
+}
+function fxPremiereTxt(id){const p=fxPremiere(id);return p?T2("Première observation : ","First seen: ")+fxDateTxt(p.date_obs,p.date_prec):""}
+function fxPaysCle(o){return o.pays_code?o.pays_code:(o.pays?"t:"+String(o.pays).trim().toLowerCase():"")}
+function fxPaysLib(o){return o.pays_code?fxPaysNom(o.pays_code):String(o.pays||"")}
+function fxSortGet(){try{const v=localStorage.getItem("pk_sort");if(["chrono","recent","alpha","taxo","ajout"].indexOf(v)>=0)return v}catch(x){}return "chrono"}
+function fxSortSet(v){try{localStorage.setItem("pk_sort",v)}catch(x){}}
+function fxFillSel(id,vide,opts,cur){
+ const s=document.querySelector(id);if(!s)return;
+ const ok=opts.some(o=>o[0]===cur);
+ const h=(vide==null?"":'<option value="">'+esc(vide)+'</option>')+opts.map(o=>'<option value="'+esc(o[0])+'"'+(ok&&o[0]===cur?" selected":"")+'>'+esc(o[1])+'</option>').join("");
+ if(s.dataset.h!==h){s.innerHTML=h;s.dataset.h=h}                         /* ne reconstruit que si la liste change (garde le menu ouvert) */
+}
+function fxTri(l,mode){
+ const lg=LANG==="en"?"en":"fr",nom=e=>String(e.nom_commun||e.nom_latin||""),A=l.slice();
+ if(mode==="ajout")return A;
+ if(mode==="alpha")return A.sort((a,b)=>nom(a).localeCompare(nom(b),lg));
+ if(mode==="taxo"){
+  const k=e=>[e.classe,e.ordre,e.famille,e.genre,e.nom_latin].map(x=>x||"");
+  return A.sort((a,b)=>{const x=k(a),y=k(b);for(let i=0;i<x.length;i++){const c=x[i].localeCompare(y[i],lg);if(c)return c}return 0});
+ }
+ const d=e=>{const p=fxPremiere(e.id);return p?String(p.date_obs):""},sens=mode==="recent"?-1:1;
+ return A.sort((a,b)=>{const x=d(a),y=d(b);if(x&&!y)return -1;if(!x&&y)return 1;if(x!==y)return sens*x.localeCompare(y);return nom(a).localeCompare(nom(b),lg)});   /* sans date : a la fin */
+}
+/* ===== FIN PATCH TRI-FILTRES ===== */
+function fxGo(id){const el=document.getElementById(id);if(!el)return;if(el.tagName==="DETAILS")el.open=true;el.scrollIntoView({behavior:"smooth",block:"start"})}
+function fxAll(o){document.querySelectorAll("#md details.fxd").forEach(d=>{d.open=o})}
+function ficheBase(id){
+ const e=ESP.find(x=>x.id===id);if(!e)return;
+ const ob=OBS[id]||[];
+ const fil=[e.classe,e.ordre,e.famille,e.genre].filter(Boolean).map(esc).join(" › ");
+ const idl=[["Statut UICN",e.uicn?pill(e.uicn)+" "+esc(UF[e.uicn])+(e.uicn_annee?" ("+e.uicn_annee+")":""):""]].concat(FX_ID.map(r=>[r[1],esc((e.extra||{})[r[0]])])).filter(r=>r[1]);
+ const taxo=FX_TXR.filter(r=>e[r[1]]).map(r=>`<tr><td>${r[0]}</td><td>${esc(e[r[1]])}</td></tr>`).join("")+`<tr><td>Espèce</td><td><i>${esc(e.nom_latin)}</i></td></tr>`;
+ const obs=ob.map(o=>`• ${esc(fxDateTxt(o.date_obs,o.date_prec)||"date ?")} · ${esc([o.lieu,fxPaysTxt(o)].filter(Boolean).join(", "))}${o.note?" — "+esc(o.note):""}`).join("\n")||"Aucune";
+ const iucn="https://www.iucnredlist.org/search?query="+encodeURIComponent(e.nom_latin)+"&searchType=species";
+ const S=[
+  ["fx_desc","Description",fxBloc("",e.biologie)],
+  ["fx_morpho","Morphologie",fxBloc("",e.morphologie)],
+  
+  ["fx_comp","Comportement",fxBloc("",e.comportement)+fxBloc("Alimentation",e.alimentation)+fxBloc("Reproduction",e.reproduction)],
+  ["fx_hab","Habitat et répartition",fxBloc("Habitat",e.habitat)+fxBloc("Répartition",e.repartition)+fxBloc("Migration",e.migration)+fxBloc("Rôle écologique",e.ecologie)],
+  ["fx_taxo","Taxonomie",`<table class="fxtx">${taxo}</table>`],
+  ["fx_obs","Mes observations ("+ob.length+")",(SES?fxObsAdmin(ob,e.id):`<div class="fxp">${obs}</div>`)],
+  ["fx_carte","Carte",`<div id="fx_map"></div><div class="cr" style="margin-top:6px">Densité des observations GBIF (pas l'aire de répartition officielle). Pays colorés selon le nombre d'observations GBIF : plus foncé = plus d'observations, donc mieux observé, pas forcément plus abondant. Marqueurs turquoise : tes observations avec coordonnées. <a style="color:var(--acc)" href="${iucn}" target="_blank" rel="noopener">Voir la fiche UICN</a></div>`]
+ ].filter(x=>x[2]);
+ modal(`<div class="big" style="${e.photo_url?`background-image:url('${esc(e.photo_url)}')`:""}"></div>
+ <div class="cr">${e.photo_url?`Photo : ${esc(e.photo_auteur)} · ${esc(e.photo_licence)} · <a style="color:var(--acc)" href="${esc(e.photo_source)}" target="_blank" rel="noopener">source</a>`:""}</div>
+ <div class="no" style="margin-top:10px">${esc(fxPremiereTxt(e.id))}</div>
+ <h2>${esc(e.nom_commun||e.nom_latin)}</h2><div class="la" style="font-size:16px">${esc(e.nom_latin)}</div>
+ <div class="fxfil">${fil}</div>
+ <div class="fxid">${idl.map(r=>`<div><small>${esc(r[0])}</small>${r[1]}</div>`).join("")}</div>
+ <div class="fxn"><button class="all" onclick="fxAll(true)">Tout déplier</button><button class="all" onclick="fxAll(false)">Tout replier</button>${S.map(x=>`<button onclick="fxGo('${x[0]}')">${esc(x[1].replace(/ \(.*$/,""))}</button>`).join("")}</div>
+ ${S.map(x=>`<details class="fxd" id="${x[0]}" ${x[0]==="fx_desc"?"open":""}><summary>${esc(x[1])}</summary><div class="fxb">${x[2]}</div></details>`).join("")}
+ <div class="cr" style="margin-top:16px">Sources : ${esc(e.sources||"")} · consulté le ${esc(e.consulte_le||"?")}</div>
+ <div style="margin-top:14px;display:flex;gap:8px"><button onclick="closeAll()">Fermer</button>${SES?`<button class="pri" onclick="openEdit('${e.id}')">Modifier</button><button onclick="delEsp('${e.id}')" style="color:#e88">Supprimer</button>`:""}</div>`);
+ fxCarte(e,ob);
+}
+function ficheBandeau(id){
+ const e=ESP.find(x=>x.id===id),b=document.querySelector("#md .big");
+ if(!b)return;
+ if(!e||!e.photo_url){b.remove();return}
+ const u=esc(e.photo_url);
+ b.outerHTML='<div class="fxhero"><div class="fxbg" style="background-image:url(\''+u+'\')"></div><img class="fxph" src="'+u+'" alt="" onerror="this.parentNode.style.display=\'none\'"></div>';
+}
+function openFiche(id){
+ FXCUR=id;
+ if(LANG==="en"){const bak=ESP;ESP=ESP.map(x=>x.id===id?fxView(x):x);try{ficheBase(id)}finally{ESP=bak}}
+ else ficheBase(id);
+ ficheBandeau(id);   /* banniere : photo entiere sur fond flou */
+}
+
+/* ================================================================== */
+/* 11. CARTE : Leaflet, pays colores par nombre d'observations GBIF, observations perso */
+const FX_GEO="https://cdn.jsdelivr.net/gh/nvkelso/natural-earth-vector@master/geojson/ne_110m_admin_0_countries.geojson";
+let FX_GEOC=null;
+async function fxGeo(){
+ if(FX_GEOC)return FX_GEOC;
+ try{const r=await fetch(FX_GEO);if(!r.ok)return null;FX_GEOC=await r.json()}catch(x){return null}
+ return FX_GEOC;
+}
+function fxIso(p){const ok=v=>v&&v!=="-99"&&v!=="-1";return ok(p.ISO_A2_EH)?p.ISO_A2_EH:(ok(p.ISO_A2)?p.ISO_A2:(ok(p.WB_A2)?p.WB_A2:null))}
+document.addEventListener("toggle",ev=>{const t=ev.target;if(t&&t.id==="fx_carte"&&t.open&&window.FXM)setTimeout(()=>{try{window.FXM.invalidateSize()}catch(x){}},60)},true);
+document.addEventListener("toggle",ev=>{const t=ev.target;if(t&&t.id==="fx_carte"&&t.open&&window.FXF)setTimeout(()=>{if(window.FXF)window.FXF()},80)},true);
+function fxCarte(e,ob){
+ const el=document.getElementById("fx_map");if(!el)return;
+ if(!window.L){el.innerHTML='<p style="padding:14px;color:#e88">'+T2("Carte indisponible (Leaflet non chargé).","Map unavailable (Leaflet not loaded).")+'</p>';return}
+ const WB=L.latLngBounds([[-58,-180],[84,180]]);
+ const ZMAX_OBS=6,SEUIL_PROCHE=2000;   /* zoom max / distance (m) en dessous de laquelle on centre sur un point */
+ const OUVERTURE_MONDE=true;           /* true : la carte s'ouvre sur le monde entier ; false : cadree sur tes observations */
+ const ptsV=(ob||[]).filter(o=>o&&o.lat!=null&&o.lon!=null&&isFinite(+o.lat)&&isFinite(+o.lon));
+ const ES="https://server.arcgisonline.com/ArcGIS/rest/services/";
+ const BM={
+  dark:{n:T2("Sombre","Dark"),u:ES+"Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}",r:ES+"Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}"},
+  ocean:{n:T2("Océans","Oceans"),u:ES+"Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}",r:ES+"Ocean/World_Ocean_Reference/MapServer/tile/{z}/{y}/{x}"},
+  relief:{n:T2("Relief","Relief"),u:ES+"World_Shaded_Relief/MapServer/tile/{z}/{y}/{x}"},
+  sat:{n:T2("Satellite","Satellite"),u:ES+"World_Imagery/MapServer/tile/{z}/{y}/{x}"}
+ };
+ const m=L.map(el,{minZoom:0,maxZoom:9,zoomSnap:0.25,zoomDelta:1,keyboard:false}).setView([20,10],1);
+ window.FXM=m;window.FXF=null;
+ [["pays",410],["dens",420],["ref",425],["obs",430]].forEach(a=>{m.createPane(a[0]).style.zIndex=a[1]});
+ m.getPane("ref").style.pointerEvents="none";
+ let cur=null,curR=null,fb=false;
+ const setBM=k=>{
+  if(cur)m.removeLayer(cur);
+  if(curR)m.removeLayer(curR);
+  const b=BM[k];
+  cur=L.tileLayer(b.u,{attribution:"Tiles © Esri",noWrap:true,detectRetina:true,maxZoom:10});
+  cur.on("tileerror",()=>{if(fb)return;fb=true;m.removeLayer(cur);cur=L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{attribution:"© OpenStreetMap",className:k==="dark"?"dk":"",noWrap:true}).addTo(m);cur.bringToBack()});
+  cur.addTo(m);cur.bringToBack();
+  curR=b.r?L.tileLayer(b.r,{noWrap:true,detectRetina:true,maxZoom:10,pane:"ref"}).addTo(m):null;
+ };
+ setBM("dark");
+ el.insertAdjacentHTML("beforebegin",'<div class="fxct"><label>'+T2("Fond","Base")+' <select id="fx_bm">'+Object.keys(BM).map(k=>'<option value="'+k+'">'+BM[k].n+'</option>').join("")+'</select></label>'+
+  '<label><input type="checkbox" id="fx_co" checked> '+T2("Mes observations","My observations")+'</label>'+
+  '<label><input type="checkbox" id="fx_cd"> '+T2("Densité GBIF","GBIF density")+'</label>'+
+  '<label>'+T2("Seuil","Threshold")+' <select id="fx_cs"><option value="1">≥ 1 obs.</option><option value="10">≥ 10 obs.</option><option value="100" selected>≥ 100 obs.</option><option value="1000">≥ 1000 obs.</option></select></label>'+
+  '<button id="fx_w">'+T2("Monde","World")+'</button><button id="fx_a">'+T2("Recentrer sur l'aire","Zoom to range")+'</button>'+(ptsV.length?'<button id="fx_o">'+T2("Centrer sur mes obs.","Zoom to my obs.")+'</button>':'')+
+  '<span class="fxlg">'+T2("Peu","Few")+' <i></i> '+T2("Beaucoup d'observations","Many observations")+'</span><span id="fx_st"></span></div>');
+ let CNT=null,geo=null;
+ const pays=L.layerGroup().addTo(m),og=L.layerGroup().addTo(m);
+ const pts=ob.filter(o=>o.lat!=null&&o.lon!=null);
+ pts.forEach(o=>L.circleMarker([o.lat,o.lon],{pane:"obs",radius:5,color:"#0b0a08",weight:1.5,fillColor:"#22d3ee",fillOpacity:1}).addTo(og).on("mouseover",function(){this.setRadius(8)}).on("mouseout",function(){this.setRadius(5)}).bindPopup(esc(fxDateTxt(o.date_obs,o.date_prec))+" "+esc(o.lieu||"")));
+ const drawP=()=>{
+  pays.clearLayers();
+  if(!geo||!CNT)return;
+  const seuil=+$("#fx_cs").value;let nb=0;
+  L.geoJSON(geo,{pane:"pays",
+   filter:f=>{const c=fxIso(f.properties),ok=!!c&&(CNT[c]||0)>=seuil;if(ok)nb++;return ok},
+   style:f=>{const n=CNT[fxIso(f.properties)]||0;return{color:"rgba(255,255,255,.3)",weight:.7,fillColor:"#d97757",fillOpacity:.2+.65*Math.min(1,Math.log10(Math.max(1,n))/4)}},
+   onEachFeature:(f,l)=>{const c=fxIso(f.properties),p=f.properties,nm=(LANG!=="en"&&p.NAME_FR)?p.NAME_FR:(p.NAME||"");l.bindTooltip(esc(nm)+" · "+(CNT[c]||0)+" obs.",{sticky:true})}
+  }).addTo(pays);
+  $("#fx_st").textContent=nb+T2(" pays"," countries");
+ };
+ const loadP=async()=>{
+  if(!e.gbif_key){$("#fx_st").textContent=T2("Pas de clé GBIF pour cette espèce.","No GBIF key for this species.");return}
+  const R2=await Promise.all([getJ("https://api.gbif.org/v1/occurrence/search?taxonKey="+e.gbif_key+"&occurrenceStatus=PRESENT&facet=country&facetLimit=300&limit=0"),fxGeo()]);
+  const f=R2[0]&&R2[0].facets&&R2[0].facets[0];
+  if(!f){$("#fx_st").textContent=T2("Pays indisponibles (GBIF).","Countries unavailable (GBIF).");return}
+  if(!R2[1]){$("#fx_st").textContent=T2("Pays indisponibles (frontières non chargées).","Countries unavailable (borders not loaded).");return}
+  CNT={};(f.counts||[]).forEach(c=>{CNT[c.name]=c.count});geo=R2[1];
+  const nq=k=>Object.keys(CNT).filter(c=>CNT[c]>=k).length;
+  $("#fx_cs").value=String(nq(100)>=3?100:(nq(10)>=3?10:1));
+  drawP();
+ };
+ const fitW=()=>{m.invalidateSize();m.setView(WB.getCenter(),m.getMinZoom(),{animate:false})};
+ const fitA=async()=>{
+  const c=e.gbif_key?await getJ("https://api.gbif.org/v2/map/occurrence/density/capabilities.json?taxonKey="+e.gbif_key):null;
+  let b=null;
+  if(c&&c.minLat!=null&&c.maxLat!=null&&c.minLng!=null&&c.maxLng!=null)b=L.latLngBounds([c.minLat,c.minLng],[c.maxLat,c.maxLng]);
+  pts.forEach(o=>{if(b)b.extend([o.lat,o.lon]);else b=L.latLngBounds([[o.lat,o.lon],[o.lat,o.lon]])});
+  if(b&&b.isValid())m.fitBounds(b,{padding:[30,30],maxZoom:6});
+ };
+ /* zoom minimum exact : le monde ENTIER est visible (jamais rogne) */
+ const zMonde=()=>{
+  const so=m.options.zoomSnap;
+  m.setMinZoom(0);m.options.zoomSnap=0;
+  const z=m.getBoundsZoom(WB,false);
+  m.options.zoomSnap=so;
+  return isFinite(z)?z:m.getBoundsZoom(WB,true);
+ };
+ const voirObs=()=>{
+  m.invalidateSize();
+  if(!ptsV.length)return;
+  const b=L.latLngBounds(ptsV.map(o=>[+o.lat,+o.lon]));
+  if(b.getNorthEast().distanceTo(b.getSouthWest())<SEUIL_PROCHE)m.setView(b.getCenter(),ZMAX_OBS-1,{animate:false});
+  else m.fitBounds(b,{padding:[50,50],maxZoom:ZMAX_OBS,animate:false});
+ };
+ const go=()=>{
+  window.FXF=null;
+  el.style.height=Math.max(300,Math.min(680,Math.round(el.offsetWidth*0.668)))+"px";
+  m.invalidateSize();
+  const z=zMonde();
+  m.setMinZoom(z);m.setMaxBounds(WB);
+  m.setView(WB.getCenter(),z,{animate:false});
+  if(!OUVERTURE_MONDE&&ptsV.length)voirObs();
+  loadP();
+ };
+ if(el.offsetWidth>0)go();else window.FXF=go;   /* section repliee : go() sera appele a l'ouverture */
+ /* --- Filets de securite contre le decalage des pays orange (cause exacte non confirmee) --- */
+ const aPlat=()=>{try{m.setView(m.getCenter(),m.getZoom(),{animate:false,reset:true})}catch(x){console.warn("carte",x)}};
+ let tZ=null,tP=null,tR=null;
+ m.on("zoomend",()=>{                                  /* au zoom minimum, une fois le mouvement fini */
+  if(m.getZoom()>m.getMinZoom()+0.01)return;
+  clearTimeout(tZ);tZ=setTimeout(aPlat,400);
+ });
+ m.on("layeradd",ev=>{                                 /* apres le dessin des pays */
+  const o=ev.layer&&ev.layer.options;
+  if(!o||o.pane!=="pays")return;
+  clearTimeout(tP);tP=setTimeout(aPlat,300);
+ });
+ if(typeof ResizeObserver!=="undefined"){              /* si le cadre change de taille apres coup (barre de defilement, texte EN plus long) */
+  const verifier=()=>{
+   const w=el.clientWidth;if(!w)return;
+   const h=Math.max(300,Math.min(680,Math.round(w*0.668)));
+   el.style.height=h+"px";
+   const s=m.getSize();
+   if(s.x===w&&s.y===h)return;
+   m.invalidateSize({animate:false});
+   const auMonde=m.getZoom()<=m.getMinZoom()+0.01,z=zMonde();
+   m.setMinZoom(z);
+   if(auMonde)m.setView(WB.getCenter(),z,{animate:false});
+  };
+  new ResizeObserver(()=>{clearTimeout(tR);tR=setTimeout(()=>{try{verifier()}catch(x){console.warn("carte",x)}},150)}).observe(el);
+ }
+ const bO=document.getElementById("fx_o");if(bO)bO.addEventListener("click",voirObs);
+ const on=(id,fn)=>$("#"+id).addEventListener("change",fn);
+ on("fx_cs",drawP);
+ on("fx_bm",ev=>setBM(ev.target.value));
+ on("fx_co",ev=>{ev.target.checked?og.addTo(m):m.removeLayer(og)});
+ let gl=null,gst=0;const STY=["classic-noborder.poly","orangeHeat.point"];
+ const gurl=()=>"https://api.gbif.org/v2/map/occurrence/density/{z}/{x}/{y}@1x.png?srs=EPSG%3A3857&bin=hex&hexPerTile=24&style="+STY[gst]+"&taxonKey="+e.gbif_key;
+ on("fx_cd",ev=>{
+  if(!e.gbif_key)return;
+  if(ev.target.checked){
+   if(!gl){gl=L.tileLayer(gurl(),{attribution:"© GBIF",pane:"dens",opacity:.85,noWrap:true});gl.on("tileerror",()=>{if(gst<STY.length-1){gst++;gl.setUrl(gurl())}})}
+   gl.addTo(m);
+  }else if(gl)m.removeLayer(gl);
+ });
+ $("#fx_w").addEventListener("click",fitW);
+ $("#fx_a").addEventListener("click",fitA);
+}
+
+/* ================================================================== */
+/* 12. MODIFIER : formulaire, version anglaise, point focal, outils, enregistrement */
+function openEditBase(id){
+ const e=ESP.find(x=>x.id===id);if(!e||!SES)return;
+ const ta=c=>`<div class="lab">${c[1]}</div><textarea id="ed_${c[0]}" rows="${c[2]}">${esc(e[c[0]])}</textarea>`;
+ modal(`<h2>Modifier : ${esc(e.nom_commun||e.nom_latin)}</h2>
+ <div class="lab">Nom commun</div><input id="ed_nom_commun" style="width:100%" value="${esc(e.nom_commun)}">
+ <div class="row"><div><div class="lab">Statut UICN</div><select id="ed_uicn" style="width:100%"><option value="">—</option>${Object.keys(UF).map(k=>`<option value="${k}" ${k===e.uicn?"selected":""}>${k} · ${UF[k]}</option>`).join("")}</select></div>
+ <div><div class="lab">Année d'évaluation</div><input id="ed_uicn_annee" type="number" style="width:100%" value="${esc(e.uicn_annee)}"></div></div>
+ <div class="lab">Fiche d'identité (court : 16 cm, 35 g, 15 ans, 6 à 7 oeufs, piscivore...)</div>
+ <div class="row">${FX_ID.map(r=>`<input id="ed_x_${r[0]}" placeholder="${r[1]}" value="${esc((e.extra||{})[r[0]])}">`).join("")}</div>
+ ${FX_CH.map(ta).join("")}
+ <div class="lab">Photo : lien</div><input id="ed_photo_url" style="width:100%" value="${esc(e.photo_url)}">
+ <div class="row"><input id="ed_photo_auteur" placeholder="Auteur" value="${esc(e.photo_auteur)}"><input id="ed_photo_licence" placeholder="Licence" value="${esc(e.photo_licence)}"></div>
+ <div class="lab">Photo : page source</div><input id="ed_photo_source" style="width:100%" value="${esc(e.photo_source)}">
+ <div class="lab">Sources du texte</div><input id="ed_sources" style="width:100%" value="${esc(e.sources)}">
+ <div style="margin-top:14px;display:flex;gap:8px"><button class="pri" onclick="saveEdit('${e.id}')">Enregistrer</button><button onclick="openFiche('${e.id}')">Annuler</button></div>`);
+}
+const FXENL={taille:"Size",poids:"Weight",longevite:"Lifespan",ponte:"Clutch / litter",regime:"Diet type"};
+function fxEnBlock(p,vals,open,extra){
+ return '<details class="fxd" style="margin-top:14px"'+(open?" open":"")+'><summary>Version anglaise</summary><div class="fxb">'+(extra||"")+
+ '<div class="lab">Nom commun (EN)</div><input id="'+p+'nom_commun" style="width:100%" value="'+esc(vals.nom_commun)+'">'+
+ '<div class="row">'+FX_ID.map(r=>'<div><div class="lab">'+FXENL[r[0]]+'</div><input id="'+p+'x_'+r[0]+'" style="width:100%" value="'+esc((vals.x||{})[r[0]])+'"></div>').join("")+'</div>'+
+ FX_CH.map(c=>'<div class="lab">'+c[1]+' (EN)</div><textarea id="'+p+c[0]+'" rows="'+c[2]+'">'+esc(vals[c[0]])+'</textarea>').join("")+
+ '</div></details>';
+}
+function openEditEn(id){
+ const e=ESP.find(x=>x.id===id);if(!e)return;
+ const bt=document.querySelector("#md > div:last-child");
+ if(bt)bt.insertAdjacentHTML("beforebegin",fxEnBlock("edEn_",Object.assign({},e.en||{}),true,'<button type="button" onclick="fxFillEn(\''+id+'\')">Remplir depuis Wikipédia en</button>'));
+}
+async function fxFillEn(id){
+ const e=ESP.find(x=>x.id===id);if(!e)return;
+ const w=await fxWiki("en",e.nom_latin);
+ if(!w){alert("Pas d'article anglais trouvé pour "+e.nom_latin);return}
+ const S=fxSecs(w.text),C={};
+ const add=(f,t)=>{t=String(t||"").replace(/\n{3,}/g,"\n\n").trim();if(t.length>30)(C[f]=C[f]||[]).push(t)};
+ add("biologie",S.lead);
+ S.secs.forEach(sc=>Object.keys(FX2_CAT).forEach(f=>{if(FX2_CAT[f].test(sc.title))add(f,sc.text)}));
+ const best=a=>{if(!a)return"";const ok=a.filter(t=>t.length>=FX2_MIN).sort((x,y)=>x.length-y.length);return ok[0]||a.slice().sort((x,y)=>y.length-x.length)[0]};
+ FX_CH.forEach(c=>{const el=document.getElementById("edEn_"+c[0]);if(el&&!el.value.trim())el.value=best(C[c[0]])});
+ const nm=document.getElementById("edEn_nom_commun");
+ if(nm&&!nm.value.trim())nm.value=w.title.charAt(0).toUpperCase()+w.title.slice(1);
+ const o=fxExtr(S.lead+"\n"+S.secs.map(sc=>sc.text).join("\n"));
+ FX_ID.forEach(r=>{const el=document.getElementById("edEn_x_"+r[0]);if(el&&!el.value.trim()&&o[r[0]])el.value=String(o[r[0]]).replace(/ ans$/," years")});
+}
+function faSplit(){
+ let n=0,k=0;
+ FX_CH.forEach(c=>{
+  const a=document.getElementById("ed_"+c[0]),b=document.getElementById("edEn_"+c[0]);
+  if(!a||!b)return;
+  const t=a.value.trim();
+  if(t.length>30&&fxLg(t)==="en"){if(!b.value.trim()){b.value=t;a.value="";n++}else k++}
+ });
+ alert(n?n+" champ(s) anglais déplacé(s) vers « Version anglaise »"+(k?" ("+k+" laissé(s) : le champ anglais était déjà rempli)":"")+". Remplis maintenant le français, puis enregistre.":(k?"Textes anglais détectés, mais les champs anglais sont déjà remplis : rien déplacé.":"Aucun texte anglais détecté dans les champs français."));
+}
+async function faFillFr(id){
+ const e=ESP.find(x=>x.id===id);if(!e)return;
+ const w=await fxWiki("fr",e.nom_latin);
+ if(!w){alert("Pas d'article français trouvé pour "+e.nom_latin);return}
+ const S=fxSecs(w.text),C={};
+ const add=(f,t)=>{t=String(t||"").replace(/\n{3,}/g,"\n\n").trim();if(t.length>30)(C[f]=C[f]||[]).push(t)};
+ add("biologie",S.lead);
+ S.secs.forEach(sc=>Object.keys(FX2_CAT).forEach(f=>{if(FX2_CAT[f].test(sc.title))add(f,sc.text)}));
+ const best=a=>{if(!a)return"";const ok=a.filter(t=>t.length>=FX2_MIN).sort((x,y)=>x.length-y.length);return ok[0]||a.slice().sort((x,y)=>y.length-x.length)[0]};
+ let n=0;
+ FX_CH.forEach(c=>{const el=document.getElementById("ed_"+c[0]),v=best(C[c[0]]);if(el&&!el.value.trim()&&v){el.value=v;n++}});
+ const o=fxExtr(S.lead+"\n"+S.secs.map(sc=>sc.text).join("\n"));
+ FX_ID.forEach(r=>{const el=document.getElementById("ed_x_"+r[0]);if(el&&!el.value.trim()&&o[r[0]]){el.value=o[r[0]];n++}});
+ alert(n+" champ(s) rempli(s) depuis Wikipédia fr (« "+w.title+" »). À relire avant d'enregistrer.");
+}
+async function c5Ident(id){
+ const e=ESP.find(x=>x.id===id);if(!e)return;
+ const w=await fxWiki("fr",e.nom_latin);
+ if(!w){alert("Pas d'article français trouvé pour "+e.nom_latin);return}
+ const S=fxSecs(w.text),o=fxExtr(S.lead+"\n"+S.secs.map(sc=>sc.text).join("\n"));
+ let n=0;
+ FX_ID.forEach(r=>{const el=document.getElementById("ed_x_"+r[0]);if(el&&o[r[0]]){el.value=o[r[0]];n++}});
+ alert(n+" valeur(s) recalculée(s) depuis Wikipédia fr (« "+w.title+" »). À relire avant d'enregistrer.");
+}
+function fbFocus(e){
+ const f=(e.extra&&e.extra.focus)||[50,35],u=esc(e.photo_url);
+ return '<div class="lab">Point focal : clique sur l\'animal (cadre la vignette de la grille)</div><div class="fbrow"><div class="fbf" id="fb_f" onclick="fbPick(event)"><img id="fb_i" src="'+u+'" draggable="false" alt=""><i id="fb_d" style="left:'+f[0]+'%;top:'+f[1]+'%"></i></div><div class="fbpv" id="fb_p" style="background-image:url(\''+u+'\');background-position:'+f[0]+'% '+f[1]+'%"></div></div><input type="hidden" id="ed_fx" value="'+f[0]+','+f[1]+'">';
+}
+function fbPick(ev){
+ const im=document.getElementById("fb_i");if(!im)return;
+ const r=im.getBoundingClientRect();
+ const x=Math.round(Math.max(0,Math.min(100,(ev.clientX-r.left)/r.width*100)));
+ const y=Math.round(Math.max(0,Math.min(100,(ev.clientY-r.top)/r.height*100)));
+ document.getElementById("fb_d").style.left=x+"%";
+ document.getElementById("fb_d").style.top=y+"%";
+ document.getElementById("fb_p").style.backgroundPosition=x+"% "+y+"%";
+ document.getElementById("ed_fx").value=x+","+y;
+}
+function openEditFocus(id){
+ const e=ESP.find(x=>x.id===id),bt=document.querySelector("#md > div:last-child");
+ if(e&&e.photo_url&&bt)bt.insertAdjacentHTML("beforebegin",fbFocus(e));
+}
+function openEditOutils(id){
+ const md=document.getElementById("md");if(!md)return;
+ const bt=document.querySelector("#md > div:last-child");
+ if(bt)bt.insertAdjacentHTML("beforebegin",'<details class="fxd" style="margin-top:14px"><summary>Outils de nettoyage</summary><div class="fxb"><div class="cr">Ces boutons remplissent le formulaire sans rien enregistrer : tu relis, puis tu cliques sur « Enregistrer ».</div><div class="row"><button type="button" onclick="faSplit()">Séparer FR / EN</button><button type="button" onclick="faFillFr(\''+id+'\')">Remplir les vides depuis Wikipédia fr</button><button type="button" onclick="c5Ident(\''+id+'\')">Recalculer la fiche d\'identité (fr)</button></div></div></details>');
+}
+function openEdit(id){
+ openEditBase(id);
+ if(!SES||!ESP.find(x=>x.id===id))return;
+ openEditEn(id);       /* bloc « Version anglaise » */
+ openEditFocus(id);    /* point focal de la photo */
+ openEditOutils(id);   /* outils de nettoyage (repliés) */
+}
+async function saveEditCore(id){
+ const gi=p=>k=>{const el=document.getElementById(p+k);return el&&el.value.trim()?el.value.trim():null};
+ const g=gi("ed_"),h=gi("edEn_");
+ const ch={nom_commun:g("nom_commun"),uicn:g("uicn"),uicn_annee:g("uicn_annee")?+g("uicn_annee"):null,photo_url:g("photo_url"),photo_auteur:g("photo_auteur"),photo_licence:g("photo_licence"),photo_source:g("photo_source"),sources:g("sources")};
+ FX_CH.forEach(c=>{ch[c[0]]=g(c[0])});
+ const old=ESP.find(x=>x.id===id)||{};
+ const ex=Object.assign({},old.extra||{});
+ FX_ID.forEach(r=>{const v=g("x_"+r[0]);if(v)ex[r[0]]=v;else delete ex[r[0]]});
+ ch.extra=ex;
+ const en={},x={};
+ const nn=h("nom_commun");if(nn)en.nom_commun=nn;
+ FX_CH.forEach(c=>{const v=h(c[0]);if(v)en[c[0]]=v});
+ FX_ID.forEach(r=>{const v=h("x_"+r[0]);if(v)x[r[0]]=v});
+ if(Object.keys(x).length)en.x=x;
+ if(old.en&&old.en.src)en.src=old.en.src;
+ ch.en=en;
+ const r=await SB.from("especes").update(ch).eq("id",id);
+ if(r.error)return alert("Erreur : "+r.error.message);
+ await load();openFiche(id);
+}
+async function saveEdit(id){
+ const el=document.getElementById("ed_fx"),v=el?el.value:null;
+ await saveEditCore(id);
+ if(!v)return;
+ const p=v.split(",").map(Number);
+ if(p.length!==2||p.some(isNaN))return;
+ const e=ESP.find(x=>x.id===id);if(!e)return;
+ const cur=(e.extra||{}).focus;
+ if(cur&&cur[0]===p[0]&&cur[1]===p[1])return;
+ const ex=Object.assign({},e.extra||{},{focus:p});
+ const r=await SB.from("especes").update({extra:ex}).eq("id",id);
+ if(r.error)return alert("Erreur : "+r.error.message);
+ await load();
+}
+
+/* ================================================================== */
+/* 13. CONNEXION ET SUPPRESSION */
+async function delEsp(id){
+ if(!confirm("Supprimer cette espèce et ses observations ?"))return;
+ const r=await SB.from("especes").delete().eq("id",id);
+ if(r.error)return alert("Erreur : "+r.error.message);
+ closeAll();load();
+}
+function openLogin(){
+ if(SES){SB.auth.signOut();return}
+ modal(`<h2>Connexion</h2><div class="lab">Email</div><input id="lg_m" type="email" style="width:100%"><div class="lab">Mot de passe</div><input id="lg_p" type="password" style="width:100%" onkeydown="if(event.key==='Enter')doLogin()"><p id="lg_e" style="color:#e88"></p><button class="pri" onclick="doLogin()">Se connecter</button>`);
+}
+async function doLogin(){
+ const r=await SB.auth.signInWithPassword({email:$("#lg_m").value.trim(),password:$("#lg_p").value});
+ if(r.error)$("#lg_e").textContent=r.error.message;else closeAll();
+}
+function ui(){$("#add").style.display=SES?"":"none";$("#log").textContent=SES?"Déconnexion":"Connexion"}
+
+/* ================================================================== */
+/* 14. AJOUT D'UNE ESPECE : recherche, import multi-sources, enregistrement */
+function openAdd(){
+ modal(`<h2>Ajouter une espèce</h2><div class="row"><input id="sq" placeholder="Nom commun ou latin" onkeydown="if(event.key==='Enter')doSearch()"><button class="pri" style="flex:0" onclick="doSearch()">Chercher</button></div><div id="sr"></div>`);
+ $("#sq").focus();
+}
+async function fxSearchGbif(){
+ const q=$("#sq").value.trim();if(!q)return;
+ $("#sr").innerHTML='<p class="cr">Recherche…</p>';
+ try{
+  const u=`https://api.gbif.org/v1/species/search?q=${encodeURIComponent(q)}&rank=SPECIES&status=ACCEPTED&highertaxonKey=1&datasetKey=d7dddbf4-2cf0-4f39-9b2a-bb099caae36c&limit=10`;
+  RES=(await (await fetch(u)).json()).results||[];
+ }catch(x){$("#sr").innerHTML='<p style="color:#e88">Recherche impossible (connexion ?).</p>';return}
+ $("#sr").innerHTML=RES.length?RES.map((s,i)=>{
+  const v=(s.vernacularNames||[]).find(n=>n.language==="fra")||(s.vernacularNames||[])[0];
+  return `<div class="res" onclick="pick(${i})"><i style="color:var(--acc)">${esc(s.canonicalName||s.scientificName)}</i>${v?" · "+esc(v.vernacularName):""}<div class="cr">${esc([s.class,s.order,s.family].filter(Boolean).join(" › "))}</div></div>`}).join(""):'<p class="cr">Aucun résultat animal.</p>';
+}
+async function getJ(u){try{const r=await fetch(u);return r.ok?await r.json():null}catch(x){return null}}
+async function doSearch(){
+ const q=$("#sq").value.trim();if(!q)return;
+ $("#sr").innerHTML='<p class="cr">Recherche…</p>';
+ const d=await getJ("https://api.inaturalist.org/v1/taxa/autocomplete?q="+encodeURIComponent(q)+"&rank=species&taxon_id=1&locale=fr&per_page=15");
+ const L2=d&&(d.results||[]).filter(r=>r.name&&FX_NOTANIM.indexOf(r.iconic_taxon_name)<0&&r.is_active!==false);
+ if(!L2||!L2.length)return fxSearchGbif();
+ const cap=t=>t?t.charAt(0).toUpperCase()+t.slice(1):"";
+ RES=L2.map(r=>({_inat:true,name:r.name,vn:r.preferred_common_name||"",ic:r.iconic_taxon_name||"",im:r.default_photo?(r.default_photo.square_url||r.default_photo.medium_url||""):""}));
+ $("#sr").innerHTML=RES.map((s,i)=>'<div class="res" onclick="pick('+i+')">'+(s.im?'<img loading="lazy" alt="" src="'+esc(s.im)+'">':'<div class="rph"></div>')+'<div><i style="color:var(--acc)">'+esc(s.name)+'</i>'+(s.vn?" · "+esc(cap(s.vn)):"")+'<div class="cr">'+esc(FX_IC[s.ic]||s.ic||"")+'</div></div></div>').join("");
+}
+async function fxResolve(name){
+ const m=await getJ("https://api.gbif.org/v1/species/match?name="+encodeURIComponent(name)+"&kingdom=Animalia");
+ const key=m&&(m.acceptedUsageKey||m.usageKey);
+ if(!key||m.matchType==="NONE")return null;
+ const d=await getJ("https://api.gbif.org/v1/species/"+key);
+ return d&&d.key&&d.rank==="SPECIES"?d:null;
+}
+async function pickImport(i){
+ const sp=RES[i],name=sp.canonicalName,cap=t=>t?t.charAt(0).toUpperCase()+t.slice(1):"";
+ modal('<p class="cr">Interrogation de Wikipédia (fr, en), GBIF, iNaturalist, Wikidata…</p>');
+ const fish=FX2_FISH.includes(sp.class);
+ const [v,st,wf,we,gd,wd,fb,ex]=await Promise.all([
+  getJ("https://api.gbif.org/v1/species/"+sp.key+"/vernacularNames?limit=200"),
+  getJ("https://api.inaturalist.org/v1/taxa?q="+encodeURIComponent(name)+"&rank=species&per_page=5"),
+  fxWiki("fr",name),fxWiki("en",name),
+  getJ("https://api.gbif.org/v1/species/"+sp.key+"/descriptions?limit=100"),
+  getJ("https://www.wikidata.org/w/api.php?action=wbgetentities&sites=enwiki&props=claims&format=json&origin=*&titles="+encodeURIComponent(name)),
+  fish?fxFish(sp):null,
+  SB.from("especes").select("id").eq("gbif_key",sp.key).maybeSingle()
+ ]);
+ const fr=v&&(v.results||[]).find(n=>n.language==="fra");
+ const t=st&&(st.results||[]).find(x=>x.name===name);
+ const dt=t&&await getJ("https://api.inaturalist.org/v1/taxa/"+t.id);
+ const tx=dt&&dt.results&&dt.results[0];
+ const photos=((tx&&tx.taxon_photos)||[]).map(x=>x.photo).filter(x=>x&&x.license_code).slice(0,12).map(x=>({url:x.medium_url||String(x.url).replace("square","medium"),by:x.attribution,lic:x.license_code,src:"https://www.inaturalist.org/taxa/"+t.id}));
+ const C={},IDC={};
+ const add=(f,src,label,txt)=>{txt=String(txt||"").replace(/\n{3,}/g,"\n\n").trim();if(txt.length>30)(C[f]=C[f]||[]).push({src:src,label:label,txt:txt})};
+ [["fr",wf],["en",we]].forEach(a=>{
+  const w=a[1];if(!w)return;
+  const S=fxSecs(w.text),src="Wikipédia "+a[0]+" (CC BY-SA)",lb="Wikipédia "+a[0]+" « "+w.title+" »";
+  add("biologie",src,lb,S.lead);
+  S.secs.forEach(sc=>Object.keys(FX2_CAT).forEach(f=>{if(FX2_CAT[f].test(sc.title))add(f,src,lb,sc.text)}));
+  const o=fxExtr(S.lead+"\n"+S.secs.map(sc=>sc.text).join("\n"));
+  Object.keys(o).forEach(k=>{(IDC[k]=IDC[k]||[]).push({src:src,txt:o[k]})});
+ });
+ ((gd&&gd.results)||[]).filter(r=>/^(eng|fra|en|fr)/i.test(r.language||"")).forEach(r=>{
+  const g=FX2G.find(x=>x[0].test(r.type||""));
+  if(g)add(g[1],"GBIF","GBIF"+(r.source?" ("+String(r.source).slice(0,40)+")":""),String(r.description||"").replace(/<[^>]+>/g," ").replace(/\s+/g," "));
+ });
+ if(fb)[["taille",fb.Length,"cm (max.)"],["poids",fb.Weight,"g (max.)"],["longevite",fb.LongevityWild,"ans"]].forEach(a=>{if(a[1])(IDC[a[0]]=IDC[a[0]]||[]).push({src:"FishBase (CC BY-NC)",txt:a[1]+" "+a[2]})});
+ FX2C={};Object.keys(C).forEach(f=>{const seen=new Set();FX2C[f]=fxOrd(C[f].filter(c=>!seen.has(c.txt)&&seen.add(c.txt)))});
+ FX2I=IDC;
+ const cs=((tx&&tx.conservation_statuses)||[]).find(c=>/iucn/i.test(c.authority||"")&&!c.place)||(tx&&tx.conservation_status);
+ let ui=cs&&String(cs.status||"").toUpperCase();if(!UF[ui])ui=null;
+ const uw=fxWdU(wd),u0=ui||uw;
+ const stt=[["Wikipédia fr",wf],["Wikipédia en",we],["GBIF",gd&&gd.results],["iNaturalist",tx],["Wikidata",wd]].concat(fish?[["FishBase",fb]]:[]).map(x=>x[0]+" "+(x[1]?"✓":"✗")).join(" · ");
+ CAND={sp:sp,photos:photos,sel:0,exists:!!(ex&&ex.data&&ex.data.id)};
+ const fld=c=>{const A=FX2C[c[0]]||[],b=A[0];
+  return '<div class="lab">'+c[1]+(A.length>1?'<select onchange="fx2Sw(\''+c[0]+'\',this.value)">'+A.map((x,k)=>'<option value="'+k+'">'+esc(x.label)+' · '+x.txt.length+' car.</option>').join("")+'</select>':'<span class="cr"> · '+(b?esc(b.label):"aucune source trouvée")+'</span>')+'</div><textarea id="f2_'+c[0]+'" rows="'+c[2]+'">'+esc(b?b.txt:"")+'</textarea>'};
+ const idr=FX_ID.map(r=>{const A=IDC[r[0]]||[];return '<div><div class="lab">'+r[1]+'</div><input id="f2_x_'+r[0]+'" style="width:100%" value="'+esc(A[0]?A[0].txt:"")+'" title="'+esc(A.map(a=>a.src+" : "+a.txt).join("\n"))+'"><div class="fx2h">'+(A[0]?esc(A[0].src):"")+'</div></div>'}).join("");
+ modal('<h2><i>'+esc(name)+'</i></h2><div class="cr">'+esc([sp.class,sp.order,sp.family].filter(Boolean).join(" › "))+'</div><div class="fx2h">Sources : '+stt+'</div>'+
+ (CAND.exists?'<p style="color:var(--acc)">Déjà dans ta liste : seule une nouvelle observation sera ajoutée.</p>':
+ '<div class="lab">Photo (iNaturalist, licence ouverte) : clique pour choisir</div><div class="ths">'+(photos.map((p,k)=>'<div class="th '+(k?'':'on')+'" style="background-image:url(\''+esc(p.url)+'\')" onclick="selPh('+k+')"></div>').join("")||'<span class="cr">Aucune photo trouvée</span>')+'</div>'+
+ '<div class="lab">Nom commun</div><input id="f_nom" style="width:100%" value="'+esc(cap(fr&&fr.vernacularName))+'">'+
+ '<div class="row"><div><div class="lab">Statut UICN (à vérifier)</div><select id="f_uicn" style="width:100%"><option value="">—</option>'+Object.keys(UF).map(k=>'<option value="'+k+'"'+(k===u0?' selected':'')+'>'+k+' · '+UF[k]+'</option>').join("")+'</select><div class="fx2h">iNaturalist : '+(ui||"?")+' · Wikidata : '+(uw||"?")+(ui&&uw&&ui!==uw?' ⚠ désaccord':'')+'</div></div><div><div class="lab">Année d\'évaluation</div><input id="f_an" type="number" style="width:100%"></div></div>'+
+ '<div class="lab">Fiche d\'identité (extraite automatiquement : à relire)</div><div class="row">'+idr+'</div>'+FX_CH.map(fld).join(""))+
+ '<div class="sec"><div class="lab">Ton observation</div>'+fxDateFields()+'<div class="row"><input id="f_lieu" placeholder="Lieu">'+fxPaysSelect()+'</div>'+fxPickMapHtml()+'<textarea id="f_note" rows="2" placeholder="Note"></textarea></div>'+
+ '<div style="margin-top:14px;display:flex;gap:8px"><button class="pri" onclick="save()">Enregistrer</button><button onclick="closeAll()">Annuler</button></div>');
+}
+function selPh(k){CAND.sel=k;document.querySelectorAll(".th").forEach((e,j)=>e.classList.toggle("on",j===k))}
+async function fxNoms(sp){
+ if(!document.getElementById("f_nom"))return;
+ const cap=t=>t?t.charAt(0).toUpperCase()+t.slice(1):"";
+ const lat=String(sp.canonicalName||"").toLowerCase(),L2=[];
+ const add=(t,s)=>{t=cap(String(t||"").replace(/\s*\(.*?\)\s*$/,"").trim());if(t&&t.toLowerCase()!==lat&&!L2.some(x=>x.t.toLowerCase()===t.toLowerCase()))L2.push({t:t,s:s})};
+ add(FXWT.fr,"Wikipédia fr");add(sp._vn,"iNaturalist");
+ const v=await getJ("https://api.gbif.org/v1/species/"+sp.key+"/vernacularNames?limit=200");
+ ((v&&v.results)||[]).filter(n=>n.language==="fra").forEach(n=>add(n.vernacularName,"GBIF"));
+ const inp=document.getElementById("f_nom");if(!inp||!L2.length)return;
+ inp.value=L2[0].t;
+ if(L2.length>1&&!document.getElementById("f_nomsel"))inp.insertAdjacentHTML("afterend",'<select id="f_nomsel" style="width:100%;margin-top:6px;font-size:12px" onchange="document.getElementById(\'f_nom\').value=this.value">'+L2.map(x=>'<option value="'+esc(x.t)+'">'+esc(x.t)+' · '+x.s+'</option>').join("")+'</select>');
+}
+function fxEnForm(){
+ if(!document.getElementById("f_nom"))return;
+ const best=f=>{const A=(FX2C[f]||[]).filter(c=>fxLgC(c)==="en");return A[0]?A[0].txt:""};
+ const vals={nom_commun:FXWT.en?FXWT.en.charAt(0).toUpperCase()+FXWT.en.slice(1):""},x={};
+ FX_ID.forEach(r=>{const A=(FX2I[r[0]]||[]).filter(a=>/Wikipédia en|FishBase/.test(a.src));if(A[0])x[r[0]]=String(A[0].txt).replace(/ ans$/," years")});
+ vals.x=x;
+ FX_CH.forEach(c=>{vals[c[0]]=best(c[0])});
+ FX_CH.forEach(c=>{const A=FX2C[c[0]]||[],el=document.getElementById("f2_"+c[0]);if(el&&A[0]&&fxLgC(A[0])==="en")el.value=""});
+ const S=document.querySelector("#md .sec");
+ if(S)S.insertAdjacentHTML("beforebegin",fxEnBlock("f2en_",vals,false,'<div class="cr">Pré-rempli depuis Wikipédia en, à relire. Laisse vide si l\'article anglais n\'existe pas.</div>'));
+}
+async function pick(i){
+ const r=RES[i];FXWT={};
+ if(r&&r._inat){
+  modal('<p class="cr">Recherche de l\'espèce dans GBIF…</p>');
+  const sp=await fxResolve(r.name);
+  if(!sp){modal('<p style="color:#e88">Espèce introuvable dans GBIF ('+esc(r.name)+'). Essaie avec le nom latin.</p><button onclick="openAdd()">Retour</button>');return}
+  sp._vn=r.vn;RES[i]=sp;
+ }
+ await pickImport(i);
+ fxNoms(RES[i]);
+ fxEnForm();   /* pre-remplit le bloc anglais */
+ fxPickMapInit();   /* carte pour poser le lieu */
+}
+async function save(){
+ const od=fxObsDate();if(od.err){alert(od.err);return}   /* valide la date AVANT toute ecriture */
+ const op=fxObsPays();
+ const sp=CAND.sp,ph=CAND.photos[CAND.sel]||{};
+ const g=id=>{const e=document.getElementById(id);return e&&e.value.trim()?e.value.trim():null};
+ const num=id=>{const v=g(id);return v&&!isNaN(+v.replace(",","."))?+v.replace(",","."):null};
+ let id=null;
+ const ex=await SB.from("especes").select("id").eq("gbif_key",sp.key).maybeSingle();
+ if(ex.data)id=ex.data.id;
+ if(!id){
+  const used=new Set(["GBIF (taxonomie)"]),srcMap={};
+  const row={nom_commun:g("f_nom"),nom_latin:sp.canonicalName||sp.scientificName,gbif_key:sp.key,regne:sp.kingdom,phylum:sp.phylum,classe:sp.class,ordre:sp.order,famille:sp.family,genre:sp.genus,uicn:g("f_uicn"),uicn_annee:num("f_an"),photo_url:ph.url||null,photo_auteur:ph.by||null,photo_licence:ph.lic||null,photo_source:ph.src||null,consulte_le:new Date().toISOString().slice(0,10)};
+  FX_CH.forEach(c=>{const v=g("f2_"+c[0]);row[c[0]]=v;const m=(FX2C[c[0]]||[]).find(x=>x.txt===v);if(m){used.add(m.src);srcMap[c[0]]=m.label}});
+  const ext={src:srcMap};
+  FX_ID.forEach(r=>{const v=g("f2_x_"+r[0]);if(v){ext[r[0]]=v;const m=(FX2I[r[0]]||[]).find(x=>x.txt===v);if(m)used.add(m.src)}});
+  const en={},enx={},ensrc={};
+  const nn=g("f2en_nom_commun");if(nn)en.nom_commun=nn;
+  FX_CH.forEach(c=>{const v=g("f2en_"+c[0]);if(v){en[c[0]]=v;const m=(FX2C[c[0]]||[]).find(x=>x.txt===v);if(m){used.add(m.src);ensrc[c[0]]=m.label}}});
+  FX_ID.forEach(r=>{const v=g("f2en_x_"+r[0]);if(v)enx[r[0]]=v});
+  if(Object.keys(enx).length)en.x=enx;
+  if(Object.keys(en).length&&FXWT.en)used.add("Wikipédia en (CC BY-SA)");
+  en.src=ensrc;
+  if(ph.url)used.add("iNaturalist (photo)");
+  if(row.uicn)used.add("iNaturalist / Wikidata (UICN, à vérifier)");
+  row.extra=ext;row.en=en;row.sources=[...used].join(" ; ");
+  const r=await SB.from("especes").insert(row).select("id").single();
+  if(r.error)return alert("Erreur : "+r.error.message);
+  id=r.data.id;
+ }
+ const r2=await SB.from("observations").insert({espece_id:id,date_obs:od.date,date_prec:od.prec,lieu:g("f_lieu"),pays:op.pays,pays_code:op.code,lat:num("f_lat"),lon:num("f_lon"),note:g("f_note")});
+ if(r2.error)return alert("Erreur : "+r2.error.message);
+ closeAll();load();
+}
+
+/* ================================================================== */
+/* 15. DEMARRAGE */
+fxApplyLang();
+(async function(){
+ if(!window.supabase){$("#grid").innerHTML='<p style="padding:22px;color:#e88">Impossible de charger Supabase (connexion internet ?).</p>';return}
+ SB=window.supabase.createClient(URL_SB,KEY_SB);
+ SB.auth.onAuthStateChange((ev,s)=>{SES=s;ui()});
+ const s=await SB.auth.getSession();SES=s.data.session;ui();
+ load();
+})();
+</script>
+</body></html>
