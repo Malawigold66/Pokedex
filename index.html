@@ -137,7 +137,7 @@ button.pri{background:var(--acc);border-color:var(--acc);color:#2b1208;font-weig
 <header>
  <h1>Pokedex des espèces</h1>
  <div class="stats" id="st"></div>
- <div><button id="fx_gbtn" onclick="fxGlobe()">Carte</button> <button id="add" class="pri" style="display:none" onclick="openAdd()">+ Ajouter</button> <button id="log" onclick="openLogin()">Connexion</button> <button id="lang" onclick="toggleLang()"><span class="lg on">FR</span> | <span class="lg">EN</span></button></div>
+ <div><button id="fx_gbtn" onclick="fxGlobe()">Carte</button> <button id="fx_exp" style="display:none" onclick="fxExport()">Exporter</button> <button id="add" class="pri" style="display:none" onclick="openAdd()">+ Ajouter</button> <button id="log" onclick="openLogin()">Connexion</button> <button id="lang" onclick="toggleLang()"><span class="lg on">FR</span> | <span class="lg">EN</span></button></div>
 </header>
 <div class="bar"><input id="q" placeholder="Filtrer : nom, famille, ordre…" oninput="render()"><select id="cl" onchange="render()"><option value="">Tous les groupes</option></select><select id="pf" onchange="render()"></select><select id="af" onchange="render()"></select><select id="so" onchange="fxSortSet(this.value);render()"></select></div>
 <div id="grid"></div>
@@ -282,11 +282,11 @@ function fx2Sw(f,k){const c=(FX2C[f]||[])[+k],el=document.getElementById("f2_"+f
 var FXCUR=null;
 const FXT={
  "Pokedex des espèces":"Species Pokedex","espèces":"species","familles":"families","ordres":"orders","pays":"countries","affichées":"shown",
- "+ Ajouter":"+ Add","Connexion":"Log in","Déconnexion":"Log out","Toutes les classes":"All classes",
+ "+ Ajouter":"+ Add","Exporter":"Export","Connexion":"Log in","Déconnexion":"Log out","Toutes les classes":"All classes",
  "Filtrer : nom, famille, ordre…":"Filter: name, family, order…",
  "Aucune espèce pour l'instant. Connecte-toi puis clique sur « Ajouter ».":"No species yet. Log in, then click “Add”.",
  "Pas de photo":"No photo","source":"source","Voir la fiche UICN":"View IUCN page",
- "Fermer":"Close","Modifier":"Edit","Supprimer":"Delete","Tout déplier":"Expand all","Tout replier":"Collapse all",
+ "Fermer":"Close","Modifier":"Edit","Actualiser":"Refresh","Supprimer":"Delete","Tout déplier":"Expand all","Tout replier":"Collapse all",
  "Morphologie":"Morphology","Comportement":"Behaviour","Alimentation":"Diet","Reproduction":"Breeding",
  "Répartition":"Distribution","Rôle écologique":"Ecological role","Habitat et répartition":"Habitat and distribution",
  "Taxonomie":"Taxonomy","Mes observations":"My observations","Carte":"Map","Arbre du vivant":"Tree of life","Aucune":"None",
@@ -567,7 +567,7 @@ function ficheBase(id){
  <div class="fxn"><button class="all" onclick="fxAll(true)">Tout déplier</button><button class="all" onclick="fxAll(false)">Tout replier</button>${S.map(x=>`<button onclick="fxGo('${x[0]}')">${esc(x[1].replace(/ \(.*$/,""))}</button>`).join("")}</div>
  ${S.map(x=>`<details class="fxd" id="${x[0]}" ${x[0]==="fx_desc"?"open":""}><summary>${esc(x[1])}</summary><div class="fxb">${x[2]}</div></details>`).join("")}
  <div class="cr" style="margin-top:16px">Sources : ${esc(e.sources||"")} · consulté le ${esc(e.consulte_le||"?")}</div>
- <div style="margin-top:14px;display:flex;gap:8px"><button onclick="closeAll()">Fermer</button>${SES?`<button class="pri" onclick="openEdit('${e.id}')">Modifier</button><button onclick="delEsp('${e.id}')" style="color:#e88">Supprimer</button>`:""}</div>`);
+ <div style="margin-top:14px;display:flex;gap:8px"><button onclick="closeAll()">Fermer</button>${SES?`<button class="pri" onclick="openEdit('${e.id}')">Modifier</button><button onclick="fxActualiser('${e.id}')">Actualiser</button><button onclick="delEsp('${e.id}')" style="color:#e88">Supprimer</button>`:""}</div>`);
  fxCarte(e,ob);
 }
 function ficheBandeau(id){
@@ -1253,7 +1253,165 @@ async function doLogin(){
  const r=await SB.auth.signInWithPassword({email:$("#lg_m").value.trim(),password:$("#lg_p").value});
  if(r.error)$("#lg_e").textContent=r.error.message;else closeAll();
 }
-function ui(){$("#add").style.display=SES?"":"none";$("#log").textContent=SES?"Déconnexion":"Connexion"}
+function ui(){$("#add").style.display=SES?"":"none";var xb=document.getElementById("fx_exp");if(xb)xb.style.display=SES?"":"none";$("#log").textContent=SES?"Déconnexion":"Connexion"}
+
+/* ================================================================== */
+/* ===== PATCH EXPORT ===== */
+/* Sauvegarde : telecharge toutes les especes et toutes les observations dans UN fichier JSON.
+   Lecture seule : rien n'est modifie en base. Visible seulement une fois connecte. */
+async function fxExportLire(table){
+ const out=[],PAS=1000;   /* Supabase renvoie 1000 lignes max par requete : lecture par tranches */
+ for(let d=0;;d+=PAS){
+  const r=await SB.from(table).select("*").order("created_at",{ascending:true}).order("id",{ascending:true}).range(d,d+PAS-1);
+  if(r.error)throw new Error(table+" : "+r.error.message);
+  for(const x of r.data)out.push(x);
+  if(r.data.length<PAS)break;
+ }
+ return out;
+}
+async function fxExport(){
+ if(!SES||!SB){alert(T2("Connecte-toi pour exporter.","Log in to export."));return}
+ const b=document.getElementById("fx_exp"),t0=b?b.textContent:"";
+ if(b){b.disabled=true;b.textContent="…"}
+ try{
+  const esp=await fxExportLire("especes"),obs=await fxExportLire("observations");
+  const now=new Date(),p2=n=>String(n).padStart(2,"0");
+  const stamp=now.getFullYear()+p2(now.getMonth()+1)+p2(now.getDate());
+  const nomf="pokedex_sauvegarde_"+stamp+".json";
+  const data={format:"pokedex-sauvegarde",version:1,exporte_le:now.toISOString(),nb_especes:esp.length,nb_observations:obs.length,especes:esp,observations:obs};
+  const blob=new Blob([JSON.stringify(data,null,1)],{type:"application/json"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);a.download=nomf;
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+  alert(T2(esp.length+" espèce(s) et "+obs.length+" observation(s) exportée(s) : "+nomf+" (dossier Téléchargements).",esp.length+" species and "+obs.length+" observation(s) exported: "+nomf+" (Downloads folder)."));
+ }catch(x){alert(T2("Export impossible : ","Export failed: ")+(x&&x.message||x))}
+ finally{if(b){b.disabled=false;b.textContent=t0}}
+}
+/* ===== FIN PATCH EXPORT ===== */
+
+/* ================================================================== */
+/* ===== PATCH ACTUALISER ===== */
+/* Actualiser UNE espece : relance la collecte (Wikipedia fr/en, GBIF, FishBase, iNaturalist, Wikidata),
+   la compare a la fiche et propose les differences, ancien et nouveau COTE A COTE.
+   Rien n'est ecrit sans clic sur « Appliquer ». Observations, photo, point focal, taxonomie et nom commun
+   ne sont jamais touches. La collecte reprend celle de pickImport (a fusionner a la prochaine consolidation). */
+var FXACT=null;   /* propositions en cours : {id, items} */
+const FXA_NZ=s=>String(s==null?"":s).replace(/\s+/g," ").trim();
+/* Fonction pure : compare la fiche e aux candidats et renvoie la liste des propositions */
+function fxActPlan(e,FXC,IDC,u0){
+ const items=[],ex=e.extra||{},en=e.en||{},enx=en.x||{};
+ const prop=(kind,f,label,old,nw,src,lab)=>{
+  if(!FXA_NZ(nw)||FXA_NZ(nw)===FXA_NZ(old))return;
+  items.push({kind:kind,f:f,label:label,old:old||"",nw:nw,src:src||"",lab:lab||""});
+ };
+ FX_CH.forEach(c=>{
+  const A=FXC[c[0]]||[];
+  const fr=A.find(x=>fxLgC(x)==="fr"),eng=A.find(x=>fxLgC(x)==="en");
+  if(fr)prop("fr",c[0],c[1],e[c[0]],fr.txt,fr.src,fr.label);
+  if(eng)prop("en",c[0],c[1]+" (EN)",en[c[0]],eng.txt,eng.src,eng.label);
+ });
+ FX_ID.forEach(r=>{
+  const A=IDC[r[0]]||[];
+  /* valeur francaise : source fr ou FishBase ; un repli anglais seulement si le champ est vide */
+  const F=A.find(a=>/Wikipédia fr|FishBase/.test(a.src))||(FXA_NZ(ex[r[0]])?null:A[0]);
+  if(F)prop("idfr",r[0],r[1],ex[r[0]],F.txt,F.src,"");
+  const E=A.find(a=>/Wikipédia en|FishBase/.test(a.src));
+  if(E)prop("iden",r[0],r[1]+" (EN)",enx[r[0]],String(E.txt).replace(/ ans$/," years"),E.src,"");
+ });
+ if(u0&&UF[u0])prop("uicn","uicn","Statut UICN",e.uicn,u0,"iNaturalist / Wikidata (UICN, à vérifier)","");
+ return items;
+}
+async function fxActualiser(id){
+ const e=ESP.find(x=>x.id===id);if(!e||!SES)return;
+ if(!e.gbif_key){alert("Cette espèce n'a pas de clé GBIF : actualisation impossible.");return}
+ modal('<p class="cr">Interrogation de Wikipédia (fr, en), GBIF, iNaturalist, Wikidata…</p>');
+ FXWT={};
+ try{
+  const sp=await getJ("https://api.gbif.org/v1/species/"+e.gbif_key);
+  if(!sp||!sp.key)throw new Error("GBIF ne répond pas");
+  const name=sp.canonicalName||e.nom_latin,fish=FX2_FISH.includes(e.classe||sp.class);
+  const [st,wf,we,gd,wd,fb]=await Promise.all([
+   getJ("https://api.inaturalist.org/v1/taxa?q="+encodeURIComponent(name)+"&per_page=5"),
+   fxWiki("fr",name),fxWiki("en",name),
+   getJ("https://api.gbif.org/v1/species/"+sp.key+"/descriptions?limit=100"),
+   getJ("https://www.wikidata.org/w/api.php?action=wbgetentities&sites=enwiki&props=claims&format=json&origin=*&titles="+encodeURIComponent(name)),
+   fish?fxFish(sp):null
+  ]);
+  const t=st&&(st.results||[]).find(x=>x.name===name);
+  const dt=t&&await getJ("https://api.inaturalist.org/v1/taxa/"+t.id);
+  const tx=dt&&dt.results&&dt.results[0];
+  const C={},IDC={};
+  const add=(f,src,label,txt)=>{txt=String(txt||"").replace(/\n{3,}/g,"\n\n").trim();if(txt.length>30)(C[f]=C[f]||[]).push({src:src,label:label,txt:txt})};
+  [["fr",wf],["en",we]].forEach(a=>{
+   const w=a[1];if(!w)return;
+   const S=fxSecs(w.text),src="Wikipédia "+a[0]+" (CC BY-SA)",lb="Wikipédia "+a[0]+" « "+w.title+" »";
+   add("biologie",src,lb,S.lead);
+   S.secs.forEach(sc=>Object.keys(FX2_CAT).forEach(f=>{if(FX2_CAT[f].test(sc.title))add(f,src,lb,sc.text)}));
+   const o=fxExtr(S.lead+"\n"+S.secs.map(sc=>sc.text).join("\n"));
+   Object.keys(o).forEach(k=>{(IDC[k]=IDC[k]||[]).push({src:src,txt:o[k]})});
+  });
+  ((gd&&gd.results)||[]).filter(r=>/^(eng|fra|en|fr)/i.test(r.language||"")).forEach(r=>{
+   const g=FX2G.find(x=>x[0].test(r.type||""));
+   if(g)add(g[1],"GBIF","GBIF"+(r.source?" ("+String(r.source).slice(0,40)+")":""),String(r.description||"").replace(/<[^>]+>/g," ").replace(/\s+/g," "));
+  });
+  if(fb)[["taille",fb.Length,"cm (max.)"],["poids",fb.Weight,"g (max.)"],["longevite",fb.LongevityWild,"ans"]].forEach(a=>{if(a[1])(IDC[a[0]]=IDC[a[0]]||[]).push({src:"FishBase (CC BY-NC)",txt:a[1]+" "+a[2]})});
+  const FXC={};Object.keys(C).forEach(f=>{const seen=new Set();FXC[f]=fxOrd(C[f].filter(c=>!seen.has(c.txt)&&seen.add(c.txt)))});
+  const cs=((tx&&tx.conservation_statuses)||[]).find(c=>/iucn/i.test(c.authority||"")&&!c.place)||(tx&&tx.conservation_status);
+  let iu=cs&&String(cs.status||"").toUpperCase();if(!UF[iu])iu=null;
+  const uw=fxWdU(wd);
+  const stt=[["Wikipédia fr",wf],["Wikipédia en",we],["GBIF",gd&&gd.results],["iNaturalist",tx],["Wikidata",wd]].concat(fish?[["FishBase",fb]]:[]).map(x=>x[0]+" "+(x[1]?"✓":"✗")).join(" · ");
+  FXACT={id:id,items:fxActPlan(e,FXC,IDC,iu||uw)};
+  fxActAffiche(e,stt,iu,uw);
+ }catch(x){modal('<p style="color:#e88">Actualisation impossible : '+esc(x&&x.message||x)+'</p><button onclick="openFiche(\''+id+'\')">Retour</button>')}
+}
+function fxActAffiche(e,stt,iu,uw){
+ const items=FXACT.items,id=e.id;
+ const nV=items.filter(x=>!FXA_NZ(x.old)).length,nD=items.length-nV;
+ const row=(it,i)=>{
+  const vide=!FXA_NZ(it.old);
+  const nw=it.kind==="uicn"?'<div class="fxp">'+(pill(it.nw)||"")+' '+esc(UF[it.nw])+'<div class="cr">iNaturalist : '+(iu||"?")+' · Wikidata : '+(uw||"?")+(iu&&uw&&iu!==uw?' ⚠ désaccord':'')+' · année d\'évaluation non modifiée (à vérifier dans Modifier)</div></div>'
+   :(it.kind==="idfr"||it.kind==="iden")?'<input id="ac_t'+i+'" style="width:100%" value="'+esc(it.nw)+'">'
+   :'<textarea id="ac_t'+i+'" rows="4">'+esc(it.nw)+'</textarea>';
+  const old=it.kind==="uicn"?'<div class="fxp">'+(pill(it.old)||"")+' '+esc(UF[it.old]||"")+'</div>':'<div class="fxp">'+esc(it.old)+'</div>';
+  return '<div class="sec" style="margin-top:10px"><label style="display:flex;gap:8px;align-items:center;cursor:pointer"><input type="checkbox" id="ac_c'+i+'"'+(vide?" checked":"")+'><b>'+esc(it.label)+'</b><span class="cr">· '+(vide?"champ vide : proposé":"différent : à comparer")+' · '+esc(it.lab||it.src)+'</span></label>'+
+   (vide?'<div style="margin-top:6px">'+nw+'</div>'
+    :'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:8px;margin-top:6px"><div><div class="lab">Actuel</div>'+old+'</div><div><div class="lab">Nouveau</div>'+nw+'</div></div>')+'</div>';
+ };
+ modal('<h2>Actualiser : '+esc(e.nom_commun||e.nom_latin)+'</h2><div class="fx2h">Sources : '+stt+'</div>'+
+  '<p class="cr">Rien n\'est enregistré tant que tu ne cliques pas sur « Appliquer ». Observations, photo, point focal et nom commun ne sont jamais modifiés. Les champs vides sont cochés ; ceux qui diffèrent sont décochés : coche ceux que tu veux remplacer.</p>'+
+  (items.length?'<div class="cr">'+nV+' champ(s) vide(s) à remplir · '+nD+' champ(s) différent(s)</div>'+items.map(row).join(""):'<p>Aucune différence : la fiche est à jour avec les sources trouvées.</p>')+
+  '<div style="margin-top:14px;display:flex;gap:8px;flex-wrap:wrap">'+(items.length?'<button class="pri" onclick="fxActAppliquer(\''+id+'\')">Appliquer la sélection</button><button onclick="fxActTout(true)">Tout cocher</button><button onclick="fxActTout(false)">Tout décocher</button>':'')+'<button onclick="openFiche(\''+id+'\')">'+(items.length?'Annuler':'Retour')+'</button></div>');
+}
+function fxActTout(on){document.querySelectorAll('#md input[id^="ac_c"]').forEach(c=>{c.checked=on})}
+async function fxActAppliquer(id){
+ const e=ESP.find(x=>x.id===id),P=FXACT;
+ if(!e||!P||P.id!==id)return;
+ const ch={},ex=Object.assign({},e.extra||{}),en=Object.assign({},e.en||{});
+ ex.src=Object.assign({},ex.src||{});en.src=Object.assign({},en.src||{});en.x=Object.assign({},en.x||{});
+ const used=new Set(String(e.sources||"").split(" ; ").map(x=>x.trim()).filter(Boolean));
+ let n=0,xe=false,ee=false;
+ P.items.forEach((it,i)=>{
+  const cb=document.getElementById("ac_c"+i);if(!cb||!cb.checked)return;
+  const el=document.getElementById("ac_t"+i),v=(el?el.value:it.nw).trim();if(!v)return;
+  n++;if(it.src)used.add(it.src);
+  if(it.kind==="fr"){ch[it.f]=v;ex.src[it.f]=it.lab;xe=true}
+  else if(it.kind==="en"){en[it.f]=v;en.src[it.f]=it.lab;ee=true}
+  else if(it.kind==="idfr"){ex[it.f]=v;xe=true}
+  else if(it.kind==="iden"){en.x[it.f]=v;ee=true}
+  else if(it.kind==="uicn")ch.uicn=v;
+ });
+ if(!n){alert("Rien n'est coché : rien à appliquer.");return}
+ if(!Object.keys(en.x).length)delete en.x;
+ if(xe)ch.extra=ex;
+ if(ee)ch.en=en;
+ ch.sources=[...used].join(" ; ");ch.consulte_le=new Date().toISOString().slice(0,10);
+ const r=await SB.from("especes").update(ch).eq("id",id).select("id");
+ if(r.error)return alert("Erreur : "+r.error.message);
+ if(!r.data||!r.data.length)return alert("Aucune ligne modifiée (droits d'écriture ?).");
+ FXACT=null;await load();openFiche(id);
+}
+/* ===== FIN PATCH ACTUALISER ===== */
 
 /* ================================================================== */
 /* 16. AJOUT D'UNE ESPECE : recherche, import multi-sources, enregistrement */
