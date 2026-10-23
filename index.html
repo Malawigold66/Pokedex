@@ -268,13 +268,31 @@ function fxLgC(c){
  if(/Wikipédia en/.test(c.src))return"en";
  return fxLg(c.txt);
 }
-/* Francais d'abord, puis le texte le plus court (au moins FX2_MIN caracteres) */
+/* ===== PATCH TEXTES-TRI ===== */
+/* Choix de texte par defaut : (1) on ECARTE les listes de noms, bibliographies et pages d'homonymie ;
+   (2) ordre : francais d'abord, puis Wikipedia (fr ou en) avant les autres sources, puis les textes assez longs
+   (FX2_MIN) du plus court au plus long, puis les textes courts. Le premier de la liste est pris par defaut. */
+function fxPoubelle(t){
+ t=String(t||"");
+ if(/(peut (?:d[ée]signer|se r[ée]f[ée]rer)|may refer to|can refer to|homonymie|disambiguation)/i.test(t.slice(0,300)))return true;
+ const W=t.split(/\s+/).filter(x=>/[A-Za-zÀ-ÿ]/.test(x));
+ const refs=(t.match(/\b(?:et al\b|pp?\.\s?\d|doi\b|isbn|issn|vol\.|bull\.|proc\.|https?:)/gi)||[]).length;
+ if(refs>=2)return true;
+ if(W.length<15)return false;
+ const fw=(t.match(/\b(?:le|la|les|des|du|est|sont|une|dans|avec|pour|sur|par|qui|que|ses|elle|il|au|aux|et|ce|se|sa|son|ont|pas|plus|comme|mais|ou|leur|leurs|cette|ces|the|of|and|is|are|was|were|with|its|from|which|that|for|this|has|have|it|to|an|by|at|be|or|their|they|can|also|than|these|those|when|where|into|but|not)\b/gi)||[]).length;
+ const ratio=fw/W.length;
+ const cap=W.filter(x=>/^[A-ZÀ-Þ]/.test(x)).length/W.length;
+ const ans=(t.match(/\b(?:1[5-9]\d\d|20[0-2]\d)\b/g)||[]).length;
+ const py=(t.match(/\(\s?(?:1[5-9]\d\d|20[0-2]\d)\s?\)/g)||[]).length;   /* annees entre parentheses : citations */
+ return py>=3||(ans>=3&&ratio<0.25)||(cap>0.3&&ratio<0.15)||ratio<0.03;
+}
 function fxOrd(a){
  const R=c=>fxLgC(c)==="fr"?0:1;
- const ok=a.filter(c=>c.txt.length>=FX2_MIN).sort((x,y)=>R(x)-R(y)||x.txt.length-y.txt.length);
- const ko=a.filter(c=>c.txt.length<FX2_MIN).sort((x,y)=>R(x)-R(y)||y.txt.length-x.txt.length);
- return ok.concat(ko);
+ const S=c=>/Wikipédia (?:fr|en)/.test(c.src)?0:1;
+ const K=c=>c.txt.length>=FX2_MIN?0:1;
+ return a.filter(c=>!fxPoubelle(c.txt)).sort((x,y)=>R(x)-R(y)||S(x)-S(y)||K(x)-K(y)||(K(x)?y.txt.length-x.txt.length:x.txt.length-y.txt.length));
 }
+/* ===== FIN PATCH TEXTES-TRI ===== */
 function fx2Sw(f,k){const c=(FX2C[f]||[])[+k],el=document.getElementById("f2_"+f);if(c&&el)el.value=c.txt}
 
 /* ================================================================== */
@@ -286,7 +304,7 @@ const FXT={
  "Filtrer : nom, famille, ordre…":"Filter: name, family, order…",
  "Aucune espèce pour l'instant. Connecte-toi puis clique sur « Ajouter ».":"No species yet. Log in, then click “Add”.",
  "Pas de photo":"No photo","source":"source","Voir la fiche UICN":"View IUCN page",
- "Fermer":"Close","Modifier":"Edit","Actualiser":"Refresh","Supprimer":"Delete","Tout déplier":"Expand all","Tout replier":"Collapse all",
+ "Fermer":"Close","Modifier":"Edit","Actualiser":"Refresh","Changer la photo":"Change photo","Supprimer":"Delete","Tout déplier":"Expand all","Tout replier":"Collapse all",
  "Morphologie":"Morphology","Comportement":"Behaviour","Alimentation":"Diet","Reproduction":"Breeding",
  "Répartition":"Distribution","Rôle écologique":"Ecological role","Habitat et répartition":"Habitat and distribution",
  "Taxonomie":"Taxonomy","Mes observations":"My observations","Carte":"Map","Arbre du vivant":"Tree of life","Aucune":"None",
@@ -567,7 +585,7 @@ function ficheBase(id){
  <div class="fxn"><button class="all" onclick="fxAll(true)">Tout déplier</button><button class="all" onclick="fxAll(false)">Tout replier</button>${S.map(x=>`<button onclick="fxGo('${x[0]}')">${esc(x[1].replace(/ \(.*$/,""))}</button>`).join("")}</div>
  ${S.map(x=>`<details class="fxd" id="${x[0]}" ${x[0]==="fx_desc"?"open":""}><summary>${esc(x[1])}</summary><div class="fxb">${x[2]}</div></details>`).join("")}
  <div class="cr" style="margin-top:16px">Sources : ${esc(e.sources||"")} · consulté le ${esc(e.consulte_le||"?")}</div>
- <div style="margin-top:14px;display:flex;gap:8px"><button onclick="closeAll()">Fermer</button>${SES?`<button class="pri" onclick="openEdit('${e.id}')">Modifier</button><button onclick="fxActualiser('${e.id}')">Actualiser</button><button onclick="delEsp('${e.id}')" style="color:#e88">Supprimer</button>`:""}</div>`);
+ <div style="margin-top:14px;display:flex;gap:8px"><button onclick="closeAll()">Fermer</button>${SES?`<button class="pri" onclick="openEdit('${e.id}')">Modifier</button><button onclick="fxActualiser('${e.id}')">Actualiser</button><button onclick="fxPhGo('${e.id}')">Changer la photo</button><button onclick="delEsp('${e.id}')" style="color:#e88">Supprimer</button>`:""}</div>`);
  fxCarte(e,ob);
 }
 function ficheBandeau(id){
@@ -941,12 +959,69 @@ function openEditOutils(id){
  const bt=document.querySelector("#md > div:last-child");
  if(bt)bt.insertAdjacentHTML("beforebegin",'<details class="fxd" style="margin-top:14px"><summary>Outils de nettoyage</summary><div class="fxb"><div class="cr">Ces boutons remplissent le formulaire sans rien enregistrer : tu relis, puis tu cliques sur « Enregistrer ».</div><div class="row"><button type="button" onclick="faSplit()">Séparer FR / EN</button><button type="button" onclick="faFillFr(\''+id+'\')">Remplir les vides depuis Wikipédia fr</button><button type="button" onclick="c5Ident(\''+id+'\')">Recalculer la fiche d\'identité (fr)</button></div></div></details>');
 }
+/* ===== PATCH CHOIX-MODIFIER ===== */
+/* Modifier : en ouvrant la fiche, on relance la collecte des textes (Wikipedia fr et en, GBIF) et on ajoute, a cote de chaque
+   rubrique (francais ET anglais), un menu pour CHOISIR un texte parmi les sources. Le choix remplit la zone de texte ;
+   rien n'est enregistre avant « Enregistrer ». La source du champ est mise a jour a l'enregistrement si le texte n'a pas ete retouche. */
+var FXMDC={fr:{},en:{}},FXMDCH={id:null,fr:{},en:{}};
+function fxCollectTextes(wf,we,gd){
+ const C={};
+ const add=(f,src,label,txt)=>{txt=String(txt||"").replace(/\n{3,}/g,"\n\n").trim();if(txt.length>30)(C[f]=C[f]||[]).push({src:src,label:label,txt:txt})};
+ [["fr",wf],["en",we]].forEach(a=>{
+  const w=a[1];if(!w)return;
+  const S=fxSecs(w.text),src="Wikipédia "+a[0]+" (CC BY-SA)",lb="Wikipédia "+a[0]+" « "+w.title+" »";
+  add("biologie",src,lb,S.lead);
+  S.secs.forEach(sc=>Object.keys(FX2_CAT).forEach(f=>{if(FX2_CAT[f].test(sc.title))add(f,src,lb,sc.text)}));
+ });
+ ((gd&&gd.results)||[]).filter(r=>/^(eng|fra|en|fr)/i.test(r.language||"")).forEach(r=>{
+  const g=FX2G.find(x=>x[0].test(r.type||""));
+  if(g)add(g[1],"GBIF","GBIF"+(r.source?" ("+String(r.source).slice(0,40)+")":""),String(r.description||"").replace(/<[^>]+>/g," ").replace(/\s+/g," "));
+ });
+ const FXC={};Object.keys(C).forEach(f=>{const seen=new Set();FXC[f]=fxOrd(C[f].filter(c=>!seen.has(c.txt)&&seen.add(c.txt)))});
+ return FXC;
+}
+async function fxMdSources(id){
+ FXMDC={fr:{},en:{}};FXMDCH={id:id,fr:{},en:{}};
+ const e=ESP.find(x=>x.id===id);if(!e||!SES)return;
+ const h2=document.querySelector("#md h2");if(!h2)return;
+ h2.insertAdjacentHTML("afterend",'<div class="fx2h" id="fx_md_st">Recherche des sources de texte (Wikipédia fr et en, GBIF)…</div>');
+ const st=m=>{const s=document.getElementById("fx_md_st");if(s)s.textContent=m};
+ try{
+  const [wf,we,gd]=await Promise.all([fxWiki("fr",e.nom_latin),fxWiki("en",e.nom_latin),e.gbif_key?getJ("https://api.gbif.org/v1/species/"+e.gbif_key+"/descriptions?limit=100"):null]);
+  if(FXMDCH.id!==id||!document.getElementById("ed_"+FX_CH[0][0]))return;   /* fenetre fermee ou autre fiche ouverte */
+  const FXC=fxCollectTextes(wf,we,gd);
+  let n=0;
+  FX_CH.forEach(c=>{
+   const A=FXC[c[0]]||[];
+   FXMDC.fr[c[0]]=A;FXMDC.en[c[0]]=A.filter(x=>fxLgC(x)==="en");
+   [["fr","ed_"],["en","edEn_"]].forEach(t=>{
+    const L=FXMDC[t[0]][c[0]],ta=document.getElementById(t[1]+c[0]),lab=ta&&ta.previousElementSibling;
+    if(!lab||!L.length)return;
+    n+=L.length;
+    lab.insertAdjacentHTML("beforeend",'<select onchange="fxMdSel(this,\''+t[0]+'\',\''+c[0]+'\')"><option value="">— choisir parmi '+L.length+' —</option>'+L.map((x,k)=>'<option value="'+k+'">'+esc(x.label)+' · '+x.txt.length+' car.</option>').join("")+'</select>');
+   });
+  });
+  st(n?"Sources : "+[["Wikipédia fr",wf],["Wikipédia en",we],["GBIF",gd&&gd.results]].map(x=>x[0]+" "+(x[1]?"✓":"✗")).join(" · ")+". Choisis un texte dans le menu d'une rubrique : il remplace la zone (rien n'est enregistré avant « Enregistrer »).":"Aucune source de texte trouvée.");
+ }catch(x){st("Sources indisponibles pour le moment.")}
+}
+function fxMdSel(sel,L,f){
+ const k=sel.value;if(k==="")return;
+ const c=FXMDC[L]&&FXMDC[L][f]&&FXMDC[L][f][+k];if(!c)return;
+ const el=document.getElementById((L==="fr"?"ed_":"edEn_")+f);if(el)el.value=c.txt;
+ FXMDCH[L][f]={txt:c.txt,label:c.label};
+ const so=document.getElementById("ed_sources");
+ if(so&&c.src&&so.value.indexOf(c.src)<0)so.value=(so.value?so.value+" ; ":"")+c.src;
+}
+/* ===== FIN PATCH CHOIX-MODIFIER ===== */
+
 function openEdit(id){
  openEditBase(id);
  if(!SES||!ESP.find(x=>x.id===id))return;
  openEditEn(id);       /* bloc « Version anglaise » */
  openEditFocus(id);    /* point focal de la photo */
  openEditOutils(id);   /* outils de nettoyage (repliés) */
+ fxPhEditInit(id);     /* changer la photo */
+ fxMdSources(id);      /* menus de sources de texte */
 }
 async function saveEditCore(id){
  const gi=p=>k=>{const el=document.getElementById(p+k);return el&&el.value.trim()?el.value.trim():null};
@@ -956,6 +1031,8 @@ async function saveEditCore(id){
  const old=ESP.find(x=>x.id===id)||{};
  const ex=Object.assign({},old.extra||{});
  FX_ID.forEach(r=>{const v=g("x_"+r[0]);if(v)ex[r[0]]=v;else delete ex[r[0]]});
+ const mdc=(window.FXMDCH&&FXMDCH.id===id)?FXMDCH:null;
+ if(mdc&&Object.keys(mdc.fr).length){ex.src=Object.assign({},ex.src||{});Object.keys(mdc.fr).forEach(f=>{const s=mdc.fr[f];if(s.txt===g(f))ex.src[f]=s.label})}
  ch.extra=ex;
  const en={},x={};
  const nn=h("nom_commun");if(nn)en.nom_commun=nn;
@@ -963,6 +1040,7 @@ async function saveEditCore(id){
  FX_ID.forEach(r=>{const v=h("x_"+r[0]);if(v)x[r[0]]=v});
  if(Object.keys(x).length)en.x=x;
  if(old.en&&old.en.src)en.src=old.en.src;
+ if(mdc&&Object.keys(mdc.en).length){en.src=Object.assign({},en.src||{});Object.keys(mdc.en).forEach(f=>{const s=mdc.en[f];if(s.txt===h(f))en.src[f]=s.label})}
  ch.en=en;
  const r=await SB.from("especes").update(ch).eq("id",id);
  if(r.error)return alert("Erreur : "+r.error.message);
@@ -1488,7 +1566,7 @@ async function pickImport(i){
  let ui=cs&&String(cs.status||"").toUpperCase();if(!UF[ui])ui=null;
  const uw=fxWdU(wd),u0=ui||uw;
  const stt=[["Wikipédia fr",wf],["Wikipédia en",we],["GBIF",gd&&gd.results],["iNaturalist",tx],["Wikidata",wd]].concat(fish?[["FishBase",fb]]:[]).map(x=>x[0]+" "+(x[1]?"✓":"✗")).join(" · ");
- CAND={sp:sp,photos:photos,sel:0,exists:!!(ex&&ex.data&&ex.data.id)};
+ CAND={sp:sp,photos:photos,sel:0,tid:(t?t.id:null),exists:!!(ex&&ex.data&&ex.data.id)};
  const fld=c=>{const A=FX2C[c[0]]||[],b=A[0];
   return '<div class="lab">'+c[1]+(A.length>1?'<select onchange="fx2Sw(\''+c[0]+'\',this.value)">'+A.map((x,k)=>'<option value="'+k+'">'+esc(x.label)+' · '+x.txt.length+' car.</option>').join("")+'</select>':'<span class="cr"> · '+(b?esc(b.label):"aucune source trouvée")+'</span>')+'</div><textarea id="f2_'+c[0]+'" rows="'+c[2]+'">'+esc(b?b.txt:"")+'</textarea>'};
  const idr=FX_ID.map(r=>{const A=IDC[r[0]]||[];return '<div><div class="lab">'+r[1]+'</div><input id="f2_x_'+r[0]+'" style="width:100%" value="'+esc(A[0]?A[0].txt:"")+'" title="'+esc(A.map(a=>a.src+" : "+a.txt).join("\n"))+'"><div class="fx2h">'+(A[0]?esc(A[0].src):"")+'</div></div>'}).join("");
@@ -1501,6 +1579,159 @@ async function pickImport(i){
  '<div class="sec"><div class="lab">Ton observation</div>'+fxDateFields()+'<div class="row"><input id="f_lieu" placeholder="Lieu">'+fxPaysSelect()+'</div>'+fxPickMapHtml()+'<textarea id="f_note" rows="2" placeholder="Note"></textarea></div>'+
  '<div style="margin-top:14px;display:flex;gap:8px"><button class="pri" onclick="save()">Enregistrer</button><button onclick="closeAll()">Annuler</button></div>');
 }
+/* ===== PATCH PHOTOS ===== */
+/* Photos : (1) a l'ajout, bouton « Chercher plus de photos » (lance tout seul s'il y en a moins de 4) et zone « colle le lien d'une image » ;
+   (2) dans Modifier, bloc « Changer la photo » : meme recherche, un clic remplit le lien, l'auteur, la licence et la source (rien n'est
+   enregistre avant « Enregistrer ») et remet le point focal au centre. Sources en plus d'iNaturalist : image principale de Wikipedia (fr, en),
+   Wikimedia Commons (categorie de l'espece, sinon recherche), GBIF (medias des observations), iNaturalist (observations de qualite recherche). */
+var FXPHE={id:null,list:[]};
+function fxPhK(u){const m=String(u).match(/photos\/(\d+)\//);return m?"inat"+m[1]:String(u)}
+function fxPhLic(l){
+ l=String(l||"");
+ const m=l.match(/creativecommons\.org\/(?:licenses|publicdomain)\/([a-z0-9-]+)\/?([\d.]*)/i);
+ if(m)return m[1].toLowerCase()==="zero"?"CC0":"CC "+m[1].toUpperCase()+(m[2]?" "+m[2]:"");
+ return l.replace(/<[^>]+>/g,"").slice(0,40);
+}
+function fxPhTh(p,click){
+ return '<div class="th" title="'+esc([p.from,p.by,p.lic].filter(Boolean).join(" · "))+'" style="background-image:url(\''+esc(String(p.url).replace(/'/g,"%27"))+'\')" onclick="'+click+'"></div>';
+}
+async function fxPhInat(name){
+ const st=await getJ("https://api.inaturalist.org/v1/taxa?q="+encodeURIComponent(name)+"&per_page=5");
+ const t=st&&(st.results||[]).find(x=>x.name===name);
+ const dt=t&&await getJ("https://api.inaturalist.org/v1/taxa/"+t.id);
+ const tx=dt&&dt.results&&dt.results[0];
+ const list=((tx&&tx.taxon_photos)||[]).map(x=>x.photo).filter(x=>x&&x.license_code).slice(0,12).map(x=>({url:x.medium_url||String(x.url).replace("square","medium"),by:x.attribution,lic:x.license_code,src:"https://www.inaturalist.org/taxa/"+t.id,from:"iNaturalist (photo)"}));
+ return {tid:t?t.id:null,list:list};
+}
+async function fxPhExtra(name,key,tid){
+ const enc=encodeURIComponent,L=[];
+ const add=(url,by,lic,src,from)=>{if(url&&/^https?:/i.test(url))L.push({url:url,by:by||"",lic:lic||"",src:src||url,from:from})};
+ const wpq=lg=>getJ("https://"+lg+".wikipedia.org/w/api.php?action=query&titles="+enc(name)+"&prop=pageimages&piprop=thumbnail|name&pithumbsize=800&redirects=1&format=json&origin=*");
+ const cq=u=>getJ("https://commons.wikimedia.org/w/api.php?action=query&"+u+"&prop=imageinfo&iiprop=url|extmetadata&iiurlwidth=800&format=json&origin=*");
+ const [wf,we,cc,gb,io]=await Promise.all([
+  wpq("fr"),wpq("en"),
+  cq("generator=categorymembers&gcmtitle="+enc("Category:"+name)+"&gcmtype=file&gcmlimit=20"),
+  key?getJ("https://api.gbif.org/v1/occurrence/search?taxonKey="+key+"&mediaType=StillImage&limit=30"):null,
+  tid?getJ("https://api.inaturalist.org/v1/observations?taxon_id="+tid+"&quality_grade=research&photos=true&license=cc0,cc-by,cc-by-sa&per_page=15&order_by=votes"):null
+ ]);
+ [wf,we].forEach((d,i)=>{
+  const pg=d&&d.query&&d.query.pages,p=pg&&Object.values(pg)[0];
+  if(p&&p.thumbnail&&p.thumbnail.source)add(p.thumbnail.source,"Wikipédia","voir la page",p.pageimage?"https://commons.wikimedia.org/wiki/File:"+enc(p.pageimage):"https://"+(i?"en":"fr")+".wikipedia.org/wiki/"+enc(name),"Wikipédia (photo)");
+ });
+ const comm=d=>{
+  const pg=d&&d.query&&d.query.pages;if(!pg)return 0;let n=0;
+  Object.values(pg).forEach(p=>{
+   const ii=p.imageinfo&&p.imageinfo[0];if(!ii)return;
+   const u=ii.thumburl||ii.url;if(!/\.(jpe?g|png|webp)(\?|$)/i.test(u||""))return;
+   const m=ii.extmetadata||{},v=k=>m[k]&&m[k].value?String(m[k].value).replace(/<[^>]+>/g,"").trim():"";
+   add(u,v("Artist"),v("LicenseShortName"),ii.descriptionurl,"Wikimedia Commons (photo)");n++;
+  });
+  return n;
+ };
+ if(!comm(cc))comm(await cq("generator=search&gsrsearch="+enc(name+" filetype:bitmap")+"&gsrnamespace=6&gsrlimit=15"));
+ ((gb&&gb.results)||[]).forEach(r=>{
+  const m=(r.media||[]).find(x=>(!x.type||/image/i.test(x.type))&&/^https?:/.test(x.identifier||""));
+  if(m)add(String(m.identifier).replace(/\/original\.(\w+)/,"/medium.$1"),m.creator||m.rightsHolder||"",fxPhLic(m.license),m.references||r.references||"https://www.gbif.org/occurrence/"+r.key,"GBIF (photo)");
+ });
+ ((io&&io.results)||[]).forEach(r=>{
+  const p=r.photos&&r.photos[0];
+  if(p&&p.url)add(String(p.url).replace("square","medium"),p.attribution,p.license_code,r.uri||"https://www.inaturalist.org/observations/"+r.id,"iNaturalist (photo)");
+ });
+ const seen=new Set();
+ return L.filter(p=>{const k=fxPhK(p.url);if(seen.has(k))return false;seen.add(k);return true}).slice(0,40);
+}
+/* --- formulaire d'ajout --- */
+function fxPhotoTools(){
+ const ths=document.querySelector("#md .ths");if(!ths||typeof CAND==="undefined"||!CAND||!CAND.photos)return;
+ ths.insertAdjacentHTML("afterend",'<div class="row"><button type="button" id="fx_phmore" onclick="fxPhMore()">Chercher plus de photos</button><input id="fx_phlink" placeholder="ou colle le lien d\'une image"><button type="button" onclick="fxPhLink()">Utiliser ce lien</button></div><div class="fx2h" id="fx_phst"></div>');
+ if(CAND.photos.length<4)fxPhMore();
+}
+function fxPhPush(p){
+ const ths=document.querySelector("#md .ths");if(!ths)return -1;
+ ths.querySelectorAll("span.cr").forEach(x=>x.remove());
+ CAND.photos.push(p);
+ const k=CAND.photos.length-1;
+ ths.insertAdjacentHTML("beforeend",fxPhTh(p,"selPh("+k+")"));
+ return k;
+}
+async function fxPhMore(){
+ const b=document.getElementById("fx_phmore"),st=document.getElementById("fx_phst");
+ if(!CAND||!CAND.sp||!document.querySelector("#md .ths"))return;
+ if(b)b.disabled=true;
+ if(st)st.textContent="Recherche de photos (Wikipédia, Commons, GBIF, iNaturalist)…";
+ try{
+  const sp=CAND.sp,L=await fxPhExtra(sp.canonicalName||sp.scientificName,sp.key,CAND.tid);
+  if(!document.getElementById("fx_phst"))return;   /* fenetre fermee entre-temps */
+  const have=new Set(CAND.photos.map(p=>fxPhK(p.url))),vide=!CAND.photos.length;
+  let n=0;
+  L.forEach(p=>{if(have.has(fxPhK(p.url)))return;have.add(fxPhK(p.url));fxPhPush(p);n++});
+  if(vide&&n)selPh(0);
+  st.textContent=n?n+" photo(s) ajoutée(s) : clique pour choisir.":"Aucune photo de plus trouvée : colle un lien d'image.";
+ }catch(x){if(st)st.textContent="Recherche impossible pour le moment."}
+ if(b)b.disabled=false;
+}
+function fxPhLink(){
+ const el=document.getElementById("fx_phlink"),u=el?el.value.trim():"";
+ if(!/^https?:\/\//i.test(u)){alert("Colle un lien complet commençant par http:// ou https://");return}
+ const vide=!CAND.photos.length,k=fxPhPush({url:u,by:"",lic:"",src:u,from:"Lien collé"});
+ if(k>=0){selPh(k);el.value=""}
+ else if(vide)alert("Ouvre d'abord une espèce à ajouter.");
+}
+/* --- Modifier --- */
+function fxPhEditInit(id){
+ const lab=document.querySelector("#md h2");if(!lab)return;
+ lab.insertAdjacentHTML("afterend",'<details class="fxd" data-ph="1" style="margin-top:6px" ontoggle="fxPhEdLoad(\''+id+'\',this)"><summary>Changer la photo : choisir parmi les photos trouvées</summary><div class="fxb"><div class="cr" id="fx_phe_st">Ouvre ce bloc pour charger les photos (iNaturalist, Wikipédia, Commons, GBIF).</div><div class="ths" id="fx_phe"></div><div class="row"><input id="fx_phe_link" placeholder="ou colle le lien d\'une image"><button type="button" onclick="fxPhEdLink()">Utiliser ce lien</button></div></div></details>');
+}
+async function fxPhEdLoad(id,det){
+ if(!det.open||det.dataset.ok)return;
+ det.dataset.ok="1";
+ const e=ESP.find(x=>x.id===id),st=document.getElementById("fx_phe_st"),box=document.getElementById("fx_phe");
+ if(!e||!box)return;
+ st.textContent="Recherche de photos (iNaturalist, Wikipédia, Commons, GBIF)…";
+ try{
+  const I=await fxPhInat(e.nom_latin),X=await fxPhExtra(e.nom_latin,e.gbif_key,I.tid);
+  const seen=new Set(),L=[];
+  I.list.concat(X).forEach(p=>{const k=fxPhK(p.url);if(!seen.has(k)){seen.add(k);L.push(p)}});
+  if(!document.getElementById("fx_phe"))return;
+  FXPHE={id:id,list:L};
+  box.innerHTML=L.map((p,k)=>fxPhTh(p,"fxPhEdPick("+k+")")).join("");
+  st.textContent=L.length?L.length+" photo(s) : clique pour choisir (rien n'est enregistré avant « Enregistrer »).":"Aucune photo trouvée : colle un lien ci-dessous.";
+ }catch(x){st.textContent="Recherche impossible pour le moment."}
+}
+function fxPhEdApply(p){
+ const s=(i,v)=>{const el=document.getElementById(i);if(el)el.value=v||""};
+ s("ed_photo_url",p.url);s("ed_photo_auteur",p.by);s("ed_photo_licence",p.lic);s("ed_photo_source",p.src);
+ const fi=document.getElementById("fb_i");if(fi)fi.src=p.url;                       /* point focal : nouvelle image, centre par defaut */
+ const pv=document.getElementById("fb_p");if(pv){pv.style.backgroundImage="url('"+String(p.url).replace(/'/g,"%27")+"')";pv.style.backgroundPosition="50% 35%"}
+ const d=document.getElementById("fb_d");if(d){d.style.left="50%";d.style.top="35%"}
+ s("ed_fx","50,35");
+ const so=document.getElementById("ed_sources");
+ if(so&&p.from&&so.value.indexOf(p.from)<0)so.value=(so.value?so.value+" ; ":"")+p.from;
+}
+function fxPhEdPick(k){
+ const p=(FXPHE.list||[])[k];if(!p)return;
+ fxPhEdApply(p);
+ document.querySelectorAll("#fx_phe .th").forEach((e,j)=>e.classList.toggle("on",j===k));
+}
+function fxPhEdLink(){
+ const el=document.getElementById("fx_phe_link"),u=el?el.value.trim():"";
+ if(!/^https?:\/\//i.test(u)){alert("Colle un lien complet commençant par http:// ou https://");return}
+ fxPhEdApply({url:u,by:"",lic:"",src:u,from:"Lien collé"});
+ document.querySelectorAll("#fx_phe .th").forEach(e=>e.classList.remove("on"));
+ el.value="";
+}
+/* ===== FIN PATCH PHOTOS ===== */
+
+/* ===== PATCH PHOTOS-FIX ===== */
+/* Correctif photos : (1) les outils photo du formulaire d'ajout ne s'affichaient pas ; (2) le bloc « Changer la photo » passe en haut
+   de Modifier ; (3) bouton « Changer la photo » dans la fiche : ouvre Modifier directement sur ce bloc, deja deplie. */
+function fxPhGo(id){
+ openEdit(id);
+ const d=document.querySelector("#md details[data-ph]");
+ if(d){d.open=true;d.scrollIntoView({block:"nearest"})}
+}
+/* ===== FIN PATCH PHOTOS-FIX ===== */
+
 function selPh(k){CAND.sel=k;document.querySelectorAll(".th").forEach((e,j)=>e.classList.toggle("on",j===k))}
 async function fxNoms(sp){
  if(!document.getElementById("f_nom"))return;
@@ -1525,6 +1756,22 @@ function fxEnForm(){
  const S=document.querySelector("#md .sec");
  if(S)S.insertAdjacentHTML("beforebegin",fxEnBlock("f2en_",vals,false,'<div class="cr">Pré-rempli depuis Wikipédia en, à relire. Laisse vide si l\'article anglais n\'existe pas.</div>'));
 }
+/* ===== PATCH CHOIX-EN ===== */
+/* Formulaire d'ajout : un menu deroulant de sources par rubrique de la VERSION ANGLAISE (comme pour le francais).
+   On ne propose que les textes reconnus anglais ; le premier est celui deja pre-rempli. */
+var FX2EN={};
+function fx2SwEn(f,k){const c=(FX2EN[f]||[])[+k],el=document.getElementById("f2en_"+f);if(c&&el)el.value=c.txt}
+function fxEnSelects(){
+ FX2EN={};
+ FX_CH.forEach(c=>{
+  const A=(FX2C[c[0]]||[]).filter(x=>fxLgC(x)==="en"),ta=document.getElementById("f2en_"+c[0]),lab=ta&&ta.previousElementSibling;
+  if(!lab)return;
+  FX2EN[c[0]]=A;
+  lab.insertAdjacentHTML("beforeend",A.length>1?'<select onchange="fx2SwEn(\''+c[0]+'\',this.value)">'+A.map((x,k)=>'<option value="'+k+'">'+esc(x.label)+' · '+x.txt.length+' car.</option>').join("")+'</select>':'<span class="cr"> · '+(A[0]?esc(A[0].label):"aucune source anglaise trouvée")+'</span>');
+ });
+}
+/* ===== FIN PATCH CHOIX-EN ===== */
+
 async function pick(i){
  const r=RES[i];FXWT={};
  if(r&&r._inat){
@@ -1536,7 +1783,9 @@ async function pick(i){
  await pickImport(i);
  fxNoms(RES[i]);
  fxEnForm();   /* pre-remplit le bloc anglais */
+ fxEnSelects();   /* menus de sources du bloc anglais */
  fxPickMapInit();   /* carte pour poser le lieu */
+ fxPhotoTools();    /* plus de photos, lien perso */
 }
 async function save(){
  const od=fxObsDate();if(od.err){alert(od.err);return}   /* valide la date AVANT toute ecriture */
@@ -1560,7 +1809,7 @@ async function save(){
   if(Object.keys(enx).length)en.x=enx;
   if(Object.keys(en).length&&FXWT.en)used.add("Wikipédia en (CC BY-SA)");
   en.src=ensrc;
-  if(ph.url)used.add("iNaturalist (photo)");
+  if(ph.url)used.add(ph.from||"iNaturalist (photo)");
   if(row.uicn)used.add("iNaturalist / Wikidata (UICN, à vérifier)");
   row.extra=ext;row.en=en;row.sources=[...used].join(" ; ");
   const r=await SB.from("especes").insert(row).select("id").single();
