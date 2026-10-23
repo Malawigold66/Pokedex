@@ -446,7 +446,21 @@ const FX_GRP=[
  ["cnidaires","Cnidaires","Cnidarians",["Anthozoa","Scyphozoa","Hydrozoa","Cubozoa","Staurozoa"]],
  ["autres","Autres","Others",null]
 ];
-function fxGroupe(e){const g=FX_GRP.find(x=>x[3]&&x[3].indexOf(e.classe)>=0);return g?g[0]:"autres"}
+/* ===== PATCH POISSONS-ORDRE ===== */
+/* GBIF n'a plus de « classe » pour les poissons. Si la classe manque, on la deduit de l'ORDRE (liste d'ordres de poissons connus) :
+   la fiche est alors rangee dans « Poissons » et la classe est enregistree par la reparation de taxonomie (fxRepTaxo). */
+const FX_ORD_POISSONS={
+ Actinopterygii:["Polypteriformes","Acipenseriformes","Lepisosteiformes","Amiiformes","Osteoglossiformes","Hiodontiformes","Elopiformes","Albuliformes","Notacanthiformes","Anguilliformes","Saccopharyngiformes","Clupeiformes","Gonorynchiformes","Cypriniformes","Characiformes","Siluriformes","Gymnotiformes","Argentiniformes","Galaxiiformes","Salmoniformes","Esociformes","Osmeriformes","Stomiiformes","Ateleopodiformes","Aulopiformes","Myctophiformes","Lampriformes","Polymixiiformes","Percopsiformes","Gadiformes","Ophidiiformes","Batrachoidiformes","Lophiiformes","Mugiliformes","Atheriniformes","Beloniformes","Cyprinodontiformes","Stephanoberyciformes","Beryciformes","Zeiformes","Gobiesociformes","Gasterosteiformes","Syngnathiformes","Synbranchiformes","Scorpaeniformes","Perciformes","Pleuronectiformes","Tetraodontiformes","Cichliformes","Blenniiformes","Gobiiformes","Kurtiformes","Carangiformes","Istiophoriformes","Anabantiformes","Pempheriformes","Acanthuriformes","Spariformes","Labriformes","Centrarchiformes","Cottiformes","Trachiniformes","Uranoscopiformes","Callionymiformes","Lutjaniformes","Moroniformes","Ambassiformes","Scombriformes","Pholidichthyiformes","Cetomimiformes","Trachichthyiformes","Holocentriformes","Gerreiformes","Alepocephaliformes","Lepidogalaxiiformes","Beryciformes"],
+ Elasmobranchii:["Carcharhiniformes","Lamniformes","Orectolobiformes","Squaliformes","Squatiniformes","Heterodontiformes","Hexanchiformes","Pristiophoriformes","Rajiformes","Torpediniformes","Myliobatiformes","Rhinopristiformes","Pristiformes"],
+ Holocephali:["Chimaeriformes"],Petromyzonti:["Petromyzontiformes"],Myxini:["Myxiniformes"],Sarcopterygii:["Coelacanthiformes","Ceratodontiformes"]
+};
+function fxClasseDeOrdre(o){
+ o=String(o||"").trim();if(!o)return null;
+ for(const c of Object.keys(FX_ORD_POISSONS))if(FX_ORD_POISSONS[c].indexOf(o)>=0)return c;
+ return null;
+}
+/* ===== FIN PATCH POISSONS-ORDRE ===== */
+function fxGroupe(e){const cl=e.classe||fxClasseDeOrdre(e.ordre),g=FX_GRP.find(x=>x[3]&&x[3].indexOf(cl)>=0);return g?g[0]:"autres"}
 function fxGrpNom(k){const g=FX_GRP.find(x=>x[0]===k);return g?T2(g[1],g[2]):k}
 function fxPremiere(id){
  const l=(OBS[id]||[]).filter(o=>o.date_obs);if(!l.length)return null;
@@ -499,6 +513,7 @@ async function fxRepTaxo(){
    let cl=d&&d.class;
    if(!cl&&Array.isArray(pa)){const p=pa.find(x=>x.rank==="CLASS")||pa.find(x=>FX2_FISH.indexOf(nm(x))>=0);cl=nm(p)}
    if(!cl)cl=await fxClasseInat(e.nom_latin);
+   if(!cl)cl=fxClasseDeOrdre(e.ordre||(d&&d.order));   /* dernier recours : deduire la classe de l'ordre */
    if(!cl){window.FXRX[e.gbif_key]=1;console.warn("[taxo] aucune classe trouvee pour",e.nom_latin,"| ancetres :",Array.isArray(pa)?pa.map(x=>x.rank+":"+nm(x)).join(" > "):"?");continue}
    const ch={classe:cl};
    if(d){if(!e.regne&&d.kingdom)ch.regne=d.kingdom;if(!e.phylum&&d.phylum)ch.phylum=d.phylum;if(!e.ordre&&d.order)ch.ordre=d.order;if(!e.famille&&d.family)ch.famille=d.family;if(!e.genre&&d.genus)ch.genre=d.genus}
@@ -1530,6 +1545,7 @@ async function pickImport(i){
  const sp=RES[i],name=sp.canonicalName,cap=t=>t?t.charAt(0).toUpperCase()+t.slice(1):"";
  modal('<p class="cr">Interrogation de Wikipédia (fr, en), GBIF, iNaturalist, Wikidata…</p>');
  if(!sp.class){try{sp.class=await fxClasseInat(sp.canonicalName||sp.scientificName)||sp.class}catch(x){}}
+ if(!sp.class)sp.class=fxClasseDeOrdre(sp.order)||sp.class;   /* dernier recours : classe deduite de l'ordre */
  const fish=FX2_FISH.includes(sp.class);
  const [v,st,wf,we,gd,wd,fb,ex]=await Promise.all([
   getJ("https://api.gbif.org/v1/species/"+sp.key+"/vernacularNames?limit=200"),
