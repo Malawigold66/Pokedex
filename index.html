@@ -1531,15 +1531,26 @@ async function doSearch(){
  const L2=d&&(d.results||[]).filter(r=>r.name&&FX_NOTANIM.indexOf(r.iconic_taxon_name)<0&&r.is_active!==false&&(!r.rank||r.rank==="species"||r.rank==="subspecies"));
  if(!L2||!L2.length)return fxSearchGbif();
  const cap=t=>t?t.charAt(0).toUpperCase()+t.slice(1):"";
- RES=L2.map(r=>({_inat:true,rk:r.rank||"",name:r.name,vn:r.preferred_common_name||"",ic:r.iconic_taxon_name||"",im:r.default_photo?(r.default_photo.square_url||r.default_photo.medium_url||""):""}));
+ RES=L2.map(r=>({_inat:true,id:r.id,mt:r.matched_term||"",q:q,rk:r.rank||"",name:r.name,vn:r.preferred_common_name||"",ic:r.iconic_taxon_name||"",im:r.default_photo?(r.default_photo.square_url||r.default_photo.medium_url||""):""}));
  $("#sr").innerHTML=RES.map((s,i)=>'<div class="res" onclick="pick('+i+')">'+(s.im?'<img loading="lazy" alt="" src="'+esc(s.im)+'">':'<div class="rph"></div>')+'<div><i style="color:var(--acc)">'+esc(s.name)+'</i>'+(s.rk==="subspecies"?' <span class="cr">· sous-espèce</span>':'')+(s.vn?" · "+esc(cap(s.vn)):"")+'<div class="cr">'+esc(FX_IC[s.ic]||s.ic||"")+'</div></div></div>').join("");
 }
-async function fxResolve(name){
- const m=await getJ("https://api.gbif.org/v1/species/match?name="+encodeURIComponent(name)+"&kingdom=Animalia");
- const key=m&&(m.acceptedUsageKey||m.usageKey);
- if(!key||m.matchType==="NONE")return null;
- const d=await getJ("https://api.gbif.org/v1/species/"+key);
- return d&&d.key&&(d.rank==="SPECIES"||d.rank==="SUBSPECIES")?d:null;
+/* Relie un nom iNaturalist a GBIF. Les deux ne nomment pas toujours l'espece pareil (ex. iNaturalist : Trichoglossus concinnus, GBIF : Glossopsitta concinna) :
+   on essaie le nom iNaturalist, puis les autres noms fournis (terme qui a trouve le resultat, texte tape, synonymes). */
+async function fxResolve(name,alts){
+ const ok=d=>d&&d.key&&(d.rank==="SPECIES"||d.rank==="SUBSPECIES");
+ const essai=async n=>{
+  const m=await getJ("https://api.gbif.org/v1/species/match?name="+encodeURIComponent(n)+"&kingdom=Animalia");
+  const key=m&&m.matchType!=="NONE"&&(m.acceptedUsageKey||m.usageKey);
+  if(key){const d=await getJ("https://api.gbif.org/v1/species/"+key);if(ok(d))return d}
+  const r=await getJ("https://api.gbif.org/v1/species/search?q="+encodeURIComponent(n)+"&rank=SPECIES&rank=SUBSPECIES&highertaxonKey=1&limit=5");
+  const f=r&&(r.results||[]).find(x=>x.canonicalName&&x.canonicalName.toLowerCase()===n.toLowerCase());
+  if(f){const k2=f.acceptedKey||f.key;const d=k2===f.key?f:await getJ("https://api.gbif.org/v1/species/"+k2);if(ok(d))return d}
+  return null;
+ };
+ const vus={};
+ const liste=[name].concat(alts||[]).map(x=>String(x||"").trim()).filter(x=>x&&!vus[x.toLowerCase()]&&(vus[x.toLowerCase()]=1));
+ for(const n of liste){const d=await essai(n);if(d)return d}
+ return null;
 }
 async function pickImport(i){
  const sp=RES[i],name=sp.canonicalName,cap=t=>t?t.charAt(0).toUpperCase()+t.slice(1):"";
@@ -1557,7 +1568,7 @@ async function pickImport(i){
   SB.from("especes").select("id").eq("gbif_key",sp.key).maybeSingle()
  ]);
  const fr=v&&(v.results||[]).find(n=>n.language==="fra");
- const t=st&&(st.results||[]).find(x=>x.name===name);
+ const t=st&&(st.results||[]).find(x=>x.name===name||x.name===sp._inat);
  const dt=t&&await getJ("https://api.inaturalist.org/v1/taxa/"+t.id);
  const tx=dt&&dt.results&&dt.results[0];
  const photos=((tx&&tx.taxon_photos)||[]).map(x=>x.photo).filter(x=>x&&x.license_code).slice(0,12).map(x=>({url:x.medium_url||String(x.url).replace("square","medium"),by:x.attribution,lic:x.license_code,src:"https://www.inaturalist.org/taxa/"+t.id}));
@@ -1792,9 +1803,14 @@ async function pick(i){
  const r=RES[i];FXWT={};
  if(r&&r._inat){
   modal('<p class="cr">Recherche de l\'espèce dans GBIF…</p>');
-  const sp=await fxResolve(r.name);
+  let sp=await fxResolve(r.name,[r.mt,r.q]);
+  if(!sp&&r.id){   /* dernier recours : les noms scientifiques (synonymes) connus d'iNaturalist */
+   const t=await getJ("https://api.inaturalist.org/v1/taxa/"+r.id);
+   const tn=(t&&t.results&&t.results[0]&&t.results[0].taxon_names)||[];
+   sp=await fxResolve("",tn.filter(x=>x.lexicon==="scientific-names").map(x=>x.name));
+  }
   if(!sp){modal('<p style="color:#e88">Espèce introuvable dans GBIF ('+esc(r.name)+'). Essaie avec le nom latin.</p><button onclick="openAdd()">Retour</button>');return}
-  sp._vn=r.vn;RES[i]=sp;
+  sp._vn=r.vn;sp._inat=r.name;RES[i]=sp;
  }
  await pickImport(i);
  fxNoms(RES[i]);
