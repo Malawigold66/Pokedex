@@ -1509,9 +1509,117 @@ async function fxActAppliquer(id){
 /* ================================================================== */
 /* 16. AJOUT D'UNE ESPECE : recherche, import multi-sources, enregistrement */
 function openAdd(){
- modal(`<h2>Ajouter une espèce</h2><div class="row"><input id="sq" placeholder="Nom commun ou latin" onkeydown="if(event.key==='Enter')doSearch()"><button class="pri" style="flex:0" onclick="doSearch()">Chercher</button></div><div id="sr"></div>`);
+ modal(`<h2>Ajouter une espèce</h2><div class="row"><input id="sq" placeholder="Nom commun ou latin" onkeydown="if(event.key==='Enter')doSearch()"><button class="pri" style="flex:0" onclick="doSearch()">Chercher</button><button type="button" style="flex:0" title="${T2("Identifier \u00e0 partir d'une photo","Identify from a photo")}" onclick="document.getElementById('fx_idf').click()">&#128247;</button></div><div class="row"><textarea id="sctx" rows="2" style="width:100%;box-sizing:border-box" placeholder="${T2("D\u00e9tails libres pour aider l'IA (facultatif) : lieu, date, heure, habitat, taille, couleur, comportement\u2026 ex. : Ta\u00efwan, Chaozhou, 10 h, rizi\u00e8re, ~30 cm, bec rouge","Free details to help the AI (optional): place, date, time, habitat, size, colour, behaviour\u2026 e.g. Taiwan, Chaozhou, 10am, rice paddy, ~30 cm, red bill")}"></textarea></div><input type="file" id="fx_idf" accept="image/*" style="display:none" onchange="fxIdChoisir(this)"><div id="sr"></div>`);
  $("#sq").focus();
 }
+/* ===== IDENTIFICATION PAR PHOTO : Gemini via la fonction Supabase "swift-worker" ===== */
+const FX_ID_URL=URL_SB+"/functions/v1/swift-worker";
+/* HEIC (iPhone) : Chrome/Firefox ne le lisent pas -> conversion JPEG a la volee */
+function fxIdChargerHeic(){
+ return new Promise((ok,ko)=>{
+  if(window.heic2any)return ok();
+  const sc=document.createElement("script");
+  sc.src="https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js";
+  sc.onload=()=>ok();sc.onerror=()=>ko(new Error("heic2any"));
+  document.head.appendChild(sc);
+ });
+}
+async function fxIdReduire(file,max){
+ try{return await fxIdReduire0(file,max)}catch(e){
+  if(!/hei[cf]/i.test((file.type||"")+" "+(file.name||"")))throw e;
+  await fxIdChargerHeic();
+  let b=await window.heic2any({blob:file,toType:"image/jpeg",quality:0.9});
+  if(Array.isArray(b))b=b[0];
+  return fxIdReduire0(b,max);
+ }
+}
+function fxIdReduire0(file,max){
+ return new Promise((ok,ko)=>{
+  const u=URL.createObjectURL(file),im=new Image();
+  im.onload=()=>{
+   const k=Math.min(1,max/Math.max(im.width,im.height)),c=document.createElement("canvas");
+   c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);
+   c.getContext("2d").drawImage(im,0,0,c.width,c.height);
+   URL.revokeObjectURL(u);
+   const d=c.toDataURL("image/jpeg",0.85);
+   ok({b64:d.split(",")[1],prev:d});
+  };
+  im.onerror=()=>{URL.revokeObjectURL(u);ko(new Error("image"))};
+  im.src=u;
+ });
+}
+function fxIdChoisir(inp){
+ const f=inp.files&&inp.files[0];inp.value="";
+ if(!f)return;
+ window.FXIDF=f;
+ const u=URL.createObjectURL(f);
+ $("#sr").innerHTML='<div style="display:flex;gap:12px;align-items:center;margin:8px 0"><img alt="" src="'+u+'" onerror="this.style.display=\'none\'" style="width:88px;height:88px;border-radius:8px;object-fit:cover"><div><div class="cr" style="margin-bottom:6px">'+esc(f.name)+'</div><button class="pri" style="flex:0" onclick="fxIdPhoto()">'+T2("Identifier cette photo","Identify this photo")+'</button></div></div><p class="cr">'+T2("Ajoute des d\u00e9tails ci-dessus si tu veux, puis clique sur Identifier.","Add details above if you like, then click Identify.")+'</p>';
+}
+async function fxIdPhoto(){
+ const f=window.FXIDF;
+ if(!f)return;
+ const sr=$("#sr"),cap=t=>t?t.charAt(0).toUpperCase()+t.slice(1):"";
+ const err=m=>{sr.innerHTML='<p style="color:#e88">'+m+'</p>'};
+ const t0=Date.now(),tm=setInterval(()=>{const e=$("#fx_idt");if(!e){clearInterval(tm);return}e.textContent=Math.round((Date.now()-t0)/1000)},500);
+ sr.innerHTML='<p class="cr">'+T2("Analyse approfondie en cours (jusqu'\u00e0 1 ou 2 minutes) : ","Deep analysis in progress (up to 1-2 minutes): ")+'<span id="fx_idt">0</span> s</p>';
+ let im;
+ try{im=await fxIdReduire(f,1024)}catch(x){
+  const fxIdHeicMsg=/hei[cf]/i.test((f.type||"")+" "+(f.name||""));
+  return err(fxIdHeicMsg?T2("Ce navigateur ne sait pas lire cette photo HEIC (iPhone). Ouvre le site dans Safari, ou exporte la photo en JPEG (Aper\u00e7u \u2192 Fichier \u2192 Exporter).","This browser cannot read this HEIC photo (iPhone). Open the site in Safari, or export the photo as JPEG."):T2("Image illisible.","Unreadable image."));
+ }
+ let d;
+ try{
+  const r=await fetch(FX_ID_URL,{method:"POST",headers:{"Content-Type":"application/json","apikey":KEY_SB,"Authorization":"Bearer "+KEY_SB},body:JSON.stringify({image:im.b64,mime:"image/jpeg",context:($("#sctx")||{}).value||""})});
+  if(r.status===429)return err(T2("Limite gratuite de Gemini atteinte, r\u00e9essaie dans quelques minutes (ou demain).","Gemini free limit reached, try again in a few minutes (or tomorrow)."));
+  d=await r.json();
+  if(!r.ok||d.error)throw new Error(d.error||r.status);
+ }catch(x){return err(T2("Identification impossible : ","Identification failed: ")+esc(String(x.message||x)))}
+ const L=(d.candidats||[]).filter(c=>c&&c.nom_latin).slice(0,5);
+ const pv='<div style="display:flex;gap:10px;align-items:center;margin:6px 0"><img alt="" src="'+im.prev+'" style="width:64px;height:64px;border-radius:8px;object-fit:cover"><span class="cr">'+T2("Propositions de l'IA (\u00e0 v\u00e9rifier) :","AI suggestions (please check):")+'</span></div>';
+ if(!L.length){sr.innerHTML=pv+'<p class="cr">'+T2("Aucun animal reconnu sur cette photo.","No animal recognised in this photo.")+'</p>';return}
+ sr.innerHTML='<p class="cr">'+T2("Recherche des photos de r\u00e9f\u00e9rence\u2026","Fetching reference photos\u2026")+'</p>';
+ const R=await Promise.all(L.map(async c=>{
+  const nl=String(c.nom_latin).trim();
+  const j=await getJ("https://api.inaturalist.org/v1/taxa/autocomplete?q="+encodeURIComponent(nl)+"&taxon_id=1&locale=fr&per_page=5");
+  const r=((j&&j.results)||[]).find(x=>x.name&&x.name.toLowerCase()===nl.toLowerCase()&&FX_NOTANIM.indexOf(x.iconic_taxon_name)<0&&x.is_active!==false);
+  let ph=[];
+  if(r&&r.id){
+   const t=await getJ("https://api.inaturalist.org/v1/taxa/"+r.id);
+   const tp=(t&&t.results&&t.results[0]&&t.results[0].taxon_photos)||[];
+   ph=tp.map(x=>x.photo&&(x.photo.medium_url||x.photo.url)).filter(Boolean).slice(0,4);
+  }
+  if(ph.length<2){   /* complement : photos d'observations GBIF */
+   try{
+    const m=await getJ("https://api.gbif.org/v1/species/match?name="+encodeURIComponent(nl)+"&kingdom=Animalia");
+    const k=m&&m.matchType!=="NONE"&&(m.acceptedUsageKey||m.usageKey);
+    if(k){
+     const o=await getJ("https://api.gbif.org/v1/occurrence/search?taxonKey="+k+"&mediaType=StillImage&limit=12");
+     const g=((o&&o.results)||[]).map(x=>(x.media||[]).find(y=>y.type==="StillImage"&&y.identifier)).filter(Boolean).map(y=>y.identifier);
+     ph=ph.concat(g).slice(0,4);
+    }
+   }catch(e){}
+  }
+  return {_inat:true,id:r?r.id:0,mt:r?(r.matched_term||""):"",q:nl,rk:r?(r.rank||""):"",name:r?r.name:nl,
+   vn:(r&&r.preferred_common_name)||c.nom_commun_fr||"",ic:r?(r.iconic_taxon_name||""):"",
+   im:r&&r.default_photo?(r.default_photo.square_url||r.default_photo.medium_url||""):"",
+   conf:Math.round(Number(c.confiance)||0),ind:c.indices||"",ph:ph};
+ }));
+ const vus={};
+ RES=R.filter(x=>!vus[x.name.toLowerCase()]&&(vus[x.name.toLowerCase()]=1));
+ const imgs=a=>a.length?a.map(u=>'<img loading="lazy" alt="" src="'+esc(u)+'" onclick="fxIdZoom(this.src)" style="width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:6px;cursor:zoom-in">').join(""):'<p class="cr" style="grid-column:1/3">'+T2("Pas de photo trouv\u00e9e.","No photo found.")+'</p>';
+ sr.innerHTML='<div style="margin:6px 0 10px"><img alt="" src="'+im.prev+'" onclick="fxIdZoom(this.src)" style="max-width:100%;max-height:240px;border-radius:8px;cursor:zoom-in;display:block"><span class="cr">'+T2("Ta photo \u2014 propositions de l'IA \u00e0 v\u00e9rifier :","Your photo \u2014 AI suggestions to check:")+'</span></div>'+
+  '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px">'+
+  RES.map((s,i)=>'<div style="border:1px solid var(--line);border-radius:10px;padding:10px"><div><i style="color:var(--acc)">'+esc(s.name)+'</i></div><div>'+esc(cap(s.vn))+'</div><div class="cr">'+(s.conf?esc(s.conf+" %"):"")+'</div><div class="cr" style="margin:4px 0 8px">'+esc(s.ind)+'</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:4px">'+imgs(s.ph)+'</div><button class="pri" style="margin-top:8px;width:100%" onclick="pick('+i+')">'+T2("Choisir celle-ci","Pick this one")+'</button></div>').join("")+'</div>';
+}
+function fxIdZoom(u){
+ const o=document.createElement("div"),g=document.createElement("img");
+ o.style.cssText="position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:99999;display:flex;align-items:center;justify-content:center;cursor:zoom-out";
+ g.style.cssText="max-width:96vw;max-height:94vh;border-radius:8px";
+ g.onerror=()=>{g.onerror=null;g.src=u};
+ g.src=u.replace("/medium.","/large.");
+ o.appendChild(g);o.onclick=()=>o.remove();document.body.appendChild(o);
+}
+/* ===== FIN IDENTIFICATION PAR PHOTO ===== */
 async function fxSearchGbif(){
  const q=$("#sq").value.trim();if(!q)return;
  $("#sr").innerHTML='<p class="cr">Recherche…</p>';
